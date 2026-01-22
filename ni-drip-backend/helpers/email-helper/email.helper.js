@@ -304,7 +304,7 @@ const sendTicketConfirmationToUser = async (userEmail, userName, ticket) => {
       <strong>Ticket ID:</strong> ${ticket._id}<br><br>
       <strong>Subject:</strong> ${ticket.subject}<br><br>
       <strong>Priority:</strong> <span style="color:#E32264;font-weight:700;">${ticket.priority}</span><br><br>
-      <strong>Submitted:</strong> ${new Date(ticket.createdAt).toLocaleDateTimeString()}
+      <strong>Submitted:</strong> ${new Date(ticket.createdAt).toLocaleString()}
     </div>
     
     <p style="font-size:17px;color:#444444;">
