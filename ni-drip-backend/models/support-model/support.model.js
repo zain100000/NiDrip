@@ -4,6 +4,7 @@
  * @description Represents a support ticket/complaint submission by users with tracking, status, and priority management.
  */
 
+const { MaxKey } = require("mongodb");
 const mongoose = require("mongoose");
 
 /**
@@ -34,7 +35,8 @@ const supportSchema = new mongoose.Schema(
     description: {
       type: String,
       required: [true, "Description is required"],
-      minlength: [200, "Description must be at least 200 characters long"],
+      minlength: [50, "Description must be at least 50 characters long"],
+        maxlength: [200, "Description cannot exceed 200 characters"],
     },
 
     status: {

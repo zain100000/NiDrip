@@ -38,7 +38,7 @@ exports.createTicket = async (req, res) => {
         success: false,
         message: "Subject and description are required",
       });
-    }  
+    }
 
     const ticket = await Support.create({
       user: userId,
