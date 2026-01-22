@@ -58,4 +58,18 @@ router.delete(
   supportController.deleteTicket,
 );
 
+// ------------------------------- TICKET ACTIONS -------------------------------
+// ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
+
+/**
+ * @desc Update ticket status (SuperAdmin only)
+ */
+router.patch(
+  "/action/update-ticket-status/:ticketId",
+  encryptedAuthMiddleware,
+  supportController.updateTicketStatus,
+);
+
 module.exports = router;
