@@ -74,6 +74,7 @@ exports.createTicket = async (req, res) => {
       success: true,
       message:
         "Ticket generated successfully. You will receive a confirmation email shortly.",
+      ticket,
     });
   } catch (error) {
     console.error("Create ticket error:", error);
