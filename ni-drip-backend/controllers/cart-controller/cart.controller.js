@@ -67,7 +67,7 @@ exports.addToCart = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Product added to cart",
+      message: "Product added to cart successfully",
       cartItem: await Cart.findById(cartItem._id).populate("productId"),
     });
   } catch (error) {
@@ -105,7 +105,7 @@ exports.decreaseCartItem = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Cart updated successfully",
+      message: "Product quantity decreased in cart",
     });
   } catch (error) {
     console.error("Decrease cart error:", error);
