@@ -63,6 +63,7 @@ const cartRoute = require("./routes/cart-route/cart.route");
 const favoriteRoute = require("./routes/favorite-route/favorite.route");
 const ratingRoute = require("./routes/rating-route/rating.route");
 const reviewRoute = require("./routes/review-route/review.route");
+const supportRoute = require("./routes/support-route/support.route");
 
 // ==================================================
 // API Routes
@@ -75,6 +76,8 @@ app.use("/api/cart", cartRoute);
 app.use("/api/favorite", favoriteRoute);
 app.use("/api/rating", ratingRoute);
 app.use("/api/review", reviewRoute);
+app.use("/api/support", supportRoute);
+
 
 
 // ==================================================
