@@ -442,9 +442,9 @@ const sendOrderConfirmationToUser = async (order) => {
     
     <div class="info-box">
       <strong>Order ID:</strong> ${order._id}<br><br>
-      <strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleString()}<br><br>
-      <strong>Payment Method:</strong> Cash on Delivery<br><br>
+      <strong>Payment Method:</strong> ${order.paymentMethod}<br><br>
       <strong>Shipping Address:</strong><br>${order.shippingAddress.replace(/\n/g, "<br>")}
+      <strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleString()}<br><br>
     </div>
     
     <h3 style="margin:32px 0 16px;color:#E32264;">Order Items</h3>
@@ -501,7 +501,7 @@ const sendNewOrderNotificationToAdmin = async (order) => {
       <strong>Customer:</strong> ${order.user.userName} (${order.user.email})<br><br>
       <strong>Phone:</strong> ${order.user.phone || "Not provided"}<br><br>
       <strong>Total Amount:</strong> Rs. ${order.totalAmount.toLocaleString()}<br><br>
-      <strong>Payment:</strong> Cash on Delivery (Pending)<br><br>
+      <strong>Payment:</strong> ${order.paymentMethod}<br><br>
       <strong>Placed:</strong> ${new Date(order.createdAt).toLocaleString()}
     </div>
     
