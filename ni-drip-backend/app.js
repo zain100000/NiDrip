@@ -64,6 +64,7 @@ const favoriteRoute = require("./routes/favorite-route/favorite.route");
 const ratingRoute = require("./routes/rating-route/rating.route");
 const reviewRoute = require("./routes/review-route/review.route");
 const supportRoute = require("./routes/support-route/support.route");
+const orderRoute = require("./routes/order-route/order.route");
 
 // ==================================================
 // API Routes
@@ -77,8 +78,7 @@ app.use("/api/favorite", favoriteRoute);
 app.use("/api/rating", ratingRoute);
 app.use("/api/review", reviewRoute);
 app.use("/api/support", supportRoute);
-
-
+app.use("/api/order", orderRoute);
 
 // ==================================================
 // MongoDB Connection + Server Start

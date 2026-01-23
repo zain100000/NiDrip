@@ -409,6 +409,126 @@ const sendTicketStatusUpdateEmail = async (
   });
 };
 
+// ────────────────────────────────────────────────────────────────
+//   Order Email Helpers
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * Send order confirmation email to the customer
+ */
+const sendOrderConfirmationToUser = async (order) => {
+  const itemsList = order.items
+    .map(
+      (item) => `
+        <li style="margin:12px 0;">
+          <strong>${item.product.title}</strong> × ${item.quantity}<br>
+          <span style="color:#666;">Price: Rs. ${item.priceAtPurchase.toLocaleString()}</span>
+        </li>
+      `,
+    )
+    .join("");
+
+  const content = `
+    <h2 style="color:#E32264;font-size:30px;margin-bottom:20px;">Order Confirmed! 🎉</h2>
+    
+    <p style="font-size:17px;color:#444444;">
+      Hello ${order.user.userName},
+    </p>
+    
+    <p style="font-size:17px;color:#444444;margin-bottom:32px;">
+      Thank you for shopping with NIDRIP! Your order has been successfully placed.
+      We'll prepare it and keep you updated.
+    </p>
+    
+    <div class="info-box">
+      <strong>Order ID:</strong> ${order._id}<br><br>
+      <strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleString()}<br><br>
+      <strong>Payment Method:</strong> Cash on Delivery<br><br>
+      <strong>Shipping Address:</strong><br>${order.shippingAddress.replace(/\n/g, "<br>")}
+    </div>
+    
+    <h3 style="margin:32px 0 16px;color:#E32264;">Order Items</h3>
+    <ul style="padding-left:20px;">
+      ${itemsList}
+    </ul>
+    
+    <div style="background:#f0f0f0;padding:20px;border-radius:8px;margin:32px 0;">
+      <strong>Subtotal:</strong> Rs. ${order.totalAmount - order.shippingCost}<br>
+      <strong>Shipping:</strong> Rs. ${order.shippingCost}<br><br>
+      <strong style="font-size:20px;color:#E32264;">Total: Rs. ${order.totalAmount.toLocaleString()}</strong>
+    </div>
+    
+    <p style="margin-top:40px;font-size:16px;">
+      We'll send you updates as your order moves through processing and shipping.<br>
+      Thank you for choosing NIDRIP!<br><br>
+      <strong>NIDRIP Team</strong>
+    </p>
+  `;
+
+  await sendEmail({
+    to: order.user.email,
+    subject: `NIDRIP Order Confirmed [#${order._id}]`,
+    html: getEmailTemplate(content, "Order Confirmation"),
+  });
+};
+
+/**
+ * Send new order notification to Admin
+ */
+const sendNewOrderNotificationToAdmin = async (order) => {
+  const adminEmail = process.env.EMAIL_USER || "";
+
+  const itemsList = order.items
+    .map(
+      (item) => `
+        <li style="margin:12px 0;">
+          <strong>${item.product.title}</strong> × ${item.quantity}<br>
+          <span style="color:#666;">Price: Rs. ${item.priceAtPurchase.toLocaleString()}</span>
+        </li>
+      `,
+    )
+    .join("");
+
+  const content = `
+    <h2 style="color:#E32264;font-size:30px;margin-bottom:20px;">New Order Received</h2>
+    
+    <p style="font-size:17px;color:#444444;">
+      A new order has been placed on NIDRIP.
+    </p>
+    
+    <div class="info-box">
+      <strong>Order ID:</strong> ${order._id}<br><br>
+      <strong>Customer:</strong> ${order.user.userName} (${order.user.email})<br><br>
+      <strong>Phone:</strong> ${order.user.phone || "Not provided"}<br><br>
+      <strong>Total Amount:</strong> Rs. ${order.totalAmount.toLocaleString()}<br><br>
+      <strong>Payment:</strong> Cash on Delivery (Pending)<br><br>
+      <strong>Placed:</strong> ${new Date(order.createdAt).toLocaleString()}
+    </div>
+    
+    <h3 style="margin:32px 0 16px;color:#E32264;">Items Ordered</h3>
+    <ul style="padding-left:20px;">
+      ${itemsList}
+    </ul>
+    
+    <div style="text-align:center;margin:40px 0;">
+      <a href="${process.env.ADMIN_DASHBOARD_URL}/orders/${order._id}"
+         class="btn-primary">
+        View Order Details
+      </a>
+    </div>
+    
+    <p style="font-size:16px;color:#666666;">
+      Please process this order in the admin panel.
+    </p>
+  `;
+
+  await sendEmail({
+    to: adminEmail,
+    subject: `New Order [#${order._id}] - Rs. ${order.totalAmount.toLocaleString()}`,
+    html: getEmailTemplate(content, "New Order Alert"),
+  });
+};
+
 module.exports = {
   sendEmail,
   getEmailTemplate,
@@ -416,4 +536,6 @@ module.exports = {
   sendTicketConfirmationToUser,
   sendNewTicketNotificationToAdmin,
   sendTicketStatusUpdateEmail,
+  sendOrderConfirmationToUser,
+  sendNewOrderNotificationToAdmin,
 };

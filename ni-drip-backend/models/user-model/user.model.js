@@ -83,7 +83,6 @@ const userSchema = new mongoose.Schema(
      * @type {string}
      * @enum ["USER"]
      */
-
     role: {
       type: String,
       enum: ["USER"],
@@ -113,17 +112,17 @@ const userSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
           required: [true, "User is required"],
-          index: true, // good for queries per user
+          index: true,
         },
 
         /**
-         * The product/book being added to cart
+         * The product being added to cart
          * @type {ObjectId}
-         * @ref "Product"  ← Change to "Book" if you still use separate Book model
+         * @ref "Product"
          */
         productId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Product", // ← most recommended change
+          ref: "Product",
           required: [true, "Product is required"],
           index: true,
         },
@@ -151,7 +150,6 @@ const userSchema = new mongoose.Schema(
 
         /**
          * Total price for this line item (quantity × unitPrice)
-         * Usually updated automatically via pre-save middleware
          * @type {number}
          */
         totalPrice: {
@@ -183,13 +181,40 @@ const userSchema = new mongoose.Schema(
      */
     orders: [
       {
+        /**
+         * Reference to the Order document
+         * @type {mongoose.Schema.Types.ObjectId}
+         * @ref "Order"
+         */
         orderId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Order",
+          required: true,
         },
+        /**
+         * The user who placed the order (redundant but useful for quick indexing)
+         * @type {mongoose.Schema.Types.ObjectId}
+         * @ref "User"
+         */
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        /**
+         * Current status of the delivery
+         */
         status: {
           type: String,
           enum: ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"],
+          default: "PENDING",
+        },
+        /**
+         * Payment status tracking
+         */
+        paymentStatus: {
+          type: String,
+          enum: ["PENDING", "PAID"],
           default: "PENDING",
         },
         placedAt: {
