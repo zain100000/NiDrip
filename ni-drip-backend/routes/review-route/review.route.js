@@ -1,30 +1,34 @@
 /**
- * @fileoverview Express routes for Product Reviewing
+ * @fileoverview Express routes for product reviews
  * @module routes/reviewRoutes
- * @description Provides endpoints for:
- * - Add or Update Product Review (Authenticated users)
- * - Fetch Product Reviews
  */
 
 const express = require("express");
 const router = express.Router();
+
 const reviewController = require("../../controllers/review-controller/review.controller");
 const {
   encryptedAuthMiddleware,
 } = require("../../middlewares/auth-middleware/auth.middleware");
 
 /**
- * @desc Create rating
+ * @description Add a new review for a product
+ * @route   POST /api/review/add-review
+ * @access  Private (Authenticated users)
  */
 router.post("/add-review", encryptedAuthMiddleware, reviewController.addReview);
 
 /**
- * @desc Retrieve all reviews (Public access for Users)
+ * @description Get all reviews for a specific product
+ * @route   GET /api/review/get-all-reviews/:productId
+ * @access  Public
  */
 router.get("/get-all-reviews/:productId", reviewController.getAllReviews);
 
 /**
- * @desc Update a review (Private access - Authenticated users)
+ * @description Update an existing review
+ * @route   PATCH /api/review/update-review/:reviewId
+ * @access  Private (Review owner)
  */
 router.patch(
   "/update-review/:reviewId",
@@ -33,7 +37,9 @@ router.patch(
 );
 
 /**
- * @desc Delete a review (Private access - Authenticated users)
+ * @description Delete a review
+ * @route   DELETE /api/review/delete-review/:reviewId
+ * @access  Private (Review owner or SuperAdmin)
  */
 router.delete(
   "/delete-review/:reviewId",

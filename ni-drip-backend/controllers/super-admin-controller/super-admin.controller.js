@@ -1,13 +1,7 @@
 /**
- * @file Super Admin controller
- * @description Controller module for managing Super Admin authentication and profile operations with encrypted JWTs.
- * Supports:
- * - Registration with password validation and secure Cloudinary upload.
- * - Login system with AES-256-GCM encrypted JWTs, session tracking, and account lockout on repeated failed attempts.
- * - Retrieval of Super Admin details by ID.
- * - Logout functionality with session invalidation.
- *
+ * @fileoverview SuperAdmin controller – authentication & profile
  * @module controllers/superAdminController
+ * @description Handles registration, login (encrypted JWT + session), profile fetch, logout.
  */
 
 const bcrypt = require("bcrypt");
@@ -21,88 +15,66 @@ const {
   hashPassword,
 } = require("../../helpers/password-helper/password.helper");
 const {
-  generateSecureToken,
-} = require("../../helpers/token-helper/token.helper");
-const {
   generateEncryptedToken,
 } = require("../../middlewares/auth-middleware/auth.middleware");
 
 /**
- * Register a new Super Admin
- * POST /api/super-admin/signup-super-admin
- * Public access
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Register new SuperAdmin
+ * @body {string} userName
+ * @body {string} email
+ * @body {string} password
+ * @files {profilePicture?}
+ * @access Public (consider restricting in production)
  */
 exports.registerSuperAdmin = async (req, res) => {
-  let uploadedFileUrl = null;
+  let uploadedUrl = null;
+
   try {
     const { userName, email, password } = req.body;
 
     if (!passwordRegex.test(password)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character",
+        message: "Password must be 8+ chars with upper, lower, number, special",
       });
     }
 
-    const existingSuperAdmin = await SuperAdmin.findOne({
-      email: email.toLowerCase(),
-      role: "SUPERADMIN",
-    });
-
-    if (existingSuperAdmin) {
+    if (await SuperAdmin.findOne({ email: email.toLowerCase() })) {
       return res.status(409).json({
         success: false,
-        message: "SuperAdmin with this email already exists",
+        message: "Email already registered",
       });
     }
 
-    let userProfileImageUrl = null;
-    if (req.files?.profilePicture) {
-      const uploadResult = await uploadToCloudinary(
+    let profilePicture = null;
+    if (req.files?.profilePicture?.[0]) {
+      const result = await uploadToCloudinary(
         req.files.profilePicture[0],
         "profilePicture",
       );
-      userProfileImageUrl = uploadResult.url;
-      uploadedFileUrl = uploadResult.url;
+      profilePicture = result.url;
+      uploadedUrl = result.url;
     }
 
-    const hashedPassword = await hashPassword(password);
-
     const superAdmin = new SuperAdmin({
-      profilePicture: userProfileImageUrl,
+      profilePicture,
       userName,
       email: email.toLowerCase(),
-      password: hashedPassword,
-      isActive: true,
+      password: await hashPassword(password),
       role: "SUPERADMIN",
-      lastLogin: null,
-      loginAttempts: 0,
-      lockUntil: null,
-      sessionId: null,
+      isActive: true,
     });
 
     await superAdmin.save();
 
     res.status(201).json({
       success: true,
-      message: "SuperAdmin created successfully",
+      message: "SuperAdmin registered successfully",
     });
   } catch (error) {
-    if (uploadedFileUrl) {
-      try {
-        await deleteFromCloudinary(uploadedFileUrl);
-      } catch (cloudErr) {
-        console.error("Failed to rollback Cloudinary upload:", cloudErr);
-      }
-    }
-
-    console.error("Error creating super admin:", error);
+    if (uploadedUrl)
+      await deleteFromCloudinary(uploadedUrl).catch(console.error);
+    console.error("Register superadmin error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -112,14 +84,10 @@ exports.registerSuperAdmin = async (req, res) => {
 };
 
 /**
- * Super Admin login with AES-256-GCM encrypted JWT
- * POST /api/super-admin/signin-super-admin
- * Public access
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Login SuperAdmin → encrypted JWT
+ * @body {string} email
+ * @body {string} password
+ * @access Public
  */
 exports.loginSuperAdmin = async (req, res) => {
   try {
@@ -128,68 +96,64 @@ exports.loginSuperAdmin = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and password are required",
+        message: "Email and password required",
       });
     }
 
-    const superAdmin = await SuperAdmin.findOne({ email });
+    const admin = await SuperAdmin.findOne({ email });
 
-    if (!superAdmin) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid credentials" });
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
     }
 
-    if (superAdmin.lockUntil && superAdmin.lockUntil > Date.now()) {
-      const remaining = Math.ceil((superAdmin.lockUntil - Date.now()) / 60000);
+    // Lockout check
+    if (admin.lockUntil && admin.lockUntil > Date.now()) {
+      const mins = Math.ceil((admin.lockUntil - Date.now()) / 60000);
       return res.status(423).json({
         success: false,
-        message: `Account locked. Try again in ${remaining} minutes.`,
+        message: `Account locked. Try again in ${mins} minutes.`,
       });
     }
 
-    if (superAdmin.lockUntil && superAdmin.lockUntil <= Date.now()) {
-      superAdmin.loginAttempts = 0;
-      superAdmin.lockUntil = null;
-      await superAdmin.save();
+    // Reset lock if expired
+    if (admin.lockUntil && admin.lockUntil <= Date.now()) {
+      admin.loginAttempts = 0;
+      admin.lockUntil = null;
     }
 
-    const isMatch = await bcrypt.compare(password, superAdmin.password);
-
-    if (!isMatch) {
-      superAdmin.loginAttempts += 1;
-      if (superAdmin.loginAttempts >= 3) {
-        superAdmin.lockUntil = Date.now() + 30 * 60 * 1000; // Lock 30 minutes
+    const match = await bcrypt.compare(password, admin.password);
+    if (!match) {
+      admin.loginAttempts += 1;
+      if (admin.loginAttempts >= 3) {
+        admin.lockUntil = Date.now() + 30 * 60 * 1000;
       }
-      await superAdmin.save();
-
-      const message =
-        superAdmin.lockUntil && superAdmin.lockUntil > Date.now()
-          ? "Too many failed login attempts. Account locked for 30 minutes."
-          : "Invalid credentials";
+      await admin.save();
 
       return res.status(401).json({
         success: false,
-        message,
-        attempts: superAdmin.loginAttempts,
+        message: admin.lockUntil
+          ? "Account locked (30 min)"
+          : "Invalid credentials",
       });
     }
 
-    superAdmin.loginAttempts = 0;
-    superAdmin.lockUntil = null;
-    superAdmin.lastLogin = new Date();
-    superAdmin.sessionId = generateSecureToken();
-    await superAdmin.save();
+    // Successful login
+    admin.loginAttempts = 0;
+    admin.lockUntil = null;
+    admin.lastLogin = new Date();
+    admin.sessionId = crypto.randomBytes(32).toString("hex");
+    await admin.save();
 
-    const payload = {
+    const token = generateEncryptedToken({
       role: "SUPERADMIN",
-      user: { id: superAdmin._id.toString(), email: superAdmin.email },
-      sessionId: superAdmin.sessionId,
-    };
+      user: { id: admin._id.toString(), email: admin.email },
+      sessionId: admin.sessionId,
+    });
 
-    const encryptedToken = generateEncryptedToken(payload);
-
-    res.cookie("accessToken", encryptedToken, {
+    res.cookie("accessToken", token, {
       httpOnly: true,
       sameSite: "strict",
       maxAge: 24 * 60 * 60 * 1000,
@@ -197,79 +161,65 @@ exports.loginSuperAdmin = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Super Admin login successfully!",
-      superAdmin: {
-        id: superAdmin._id,
-        userName: superAdmin.userName,
-        email: superAdmin.email,
+      message: "SuperAdmin logged in successfully",
+      admin: {
+        id: admin._id,
+        userName: admin.userName,
+        email: admin.email,
       },
-      token: encryptedToken,
-      expiresIn: 24 * 60 * 60,
+      token,
+      expiresIn: 86400,
     });
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error("SuperAdmin login error:", error);
     res.status(500).json({
       success: false,
-      message: "Server Error",
-      error: error.message,
+      message: "Login failed",
     });
   }
 };
 
 /**
- * Get Super Admin by ID
- * GET /api/super-admin/get-super-admin-by-id/:superAdminId
- * Private access
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Get SuperAdmin profile
+ * @param {string} superAdminId
+ * @access Private
  */
 exports.getSuperAdminById = async (req, res) => {
   try {
-    const { superAdminId } = req.params;
+    const admin = await SuperAdmin.findById(req.params.superAdminId).select(
+      "-password -__v",
+    );
 
-    const superAdmin =
-      await SuperAdmin.findById(superAdminId).select("-password -__v");
-
-    if (!superAdmin) {
+    if (!admin) {
       return res.status(404).json({
         success: false,
-        message: "Super Admin not found",
+        message: "SuperAdmin not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Super Admin fetched successfully",
-      superAdmin,
+      message: "Profile fetched successfully",
+      superAdmin: admin,
     });
   } catch (error) {
-    console.error("Fetch SuperAdmin Error:", error);
+    console.error("Get superadmin error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",
-      error: error.message,
     });
   }
 };
 
 /**
- * Logout Super Admin
- * POST /api/super-admin/logout-super-admin
- * Private access
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Logout SuperAdmin
+ * @access Private
  */
 exports.logoutSuperAdmin = async (req, res) => {
   try {
     if (req.user?.id) {
       await SuperAdmin.findByIdAndUpdate(req.user.id, {
-        sessionId: generateSecureToken(), // Invalidate session
+        sessionId: null,
       });
     }
 
@@ -277,16 +227,13 @@ exports.logoutSuperAdmin = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Logout successfully",
+      message: "Logged out successfully",
     });
   } catch (error) {
-    console.error("Logout Error:", error);
+    console.error("Logout error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",
-      error: error.message,
     });
   }
 };
-
-

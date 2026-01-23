@@ -1,16 +1,8 @@
 /**
- * @file Order Controller
- * @description Controller module for managing customer orders in the e-commerce application.
- * Supports:
- * - Placing a new order from the user's cart (Cart-based checkout)
- * - Placing a direct "Buy Now" order for a single product (Direct Buy)
- * - Stock validation and deduction
- * - Order creation with item snapshots
- * - Updating user's order history
- * - Clearing the cart after cart-based checkout
- * - Email confirmation to user & admin notification
- *
+ * @fileoverview Order controller – handles checkout and order management
  * @module controllers/orderController
+ * @description Supports cart-based checkout, direct buy-now, stock validation,
+ *              order history sync, and email notifications.
  */
 
 const Order = require("../../models/order-model/order.model");
@@ -19,25 +11,18 @@ const Product = require("../../models/product-model/product.model");
 const {
   sendOrderConfirmationToUser,
   sendNewOrderNotificationToAdmin,
-  sendOrderCancellationToAdmin,
   sendOrderCancellationToUser,
+  sendOrderCancellationToAdmin,
+  sendOrderStatusUpdateEmail,
 } = require("../../helpers/email-helper/email.helper");
 
 /**
- * Place a new order (supports both Cart-based and Direct Buy modes)
- * POST /api/order/place-order
- * Private access (authenticated user)
- *
- * @body {Object} [req.body]
- * @body {string} [shippingAddress] - Optional override address
- * @body {number} [shippingCost=0] - Optional shipping cost
- * @body {string} [productId] - Required for Direct Buy mode (single product)
- * @body {number} [quantity=1] - Required for Direct Buy mode
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Create new order (cart-based or direct buy)
+ * @body {string} [shippingAddress]     – optional override (highest priority)
+ * @body {number} [shippingCost=0]
+ * @body {string} [productId]           – required for direct buy
+ * @body {number} [quantity=1]          – required for direct buy
+ * @access Private
  */
 exports.placeOrder = async (req, res) => {
   try {
@@ -49,12 +34,40 @@ exports.placeOrder = async (req, res) => {
       quantity = 1,
     } = req.body;
 
-    // Fetch user
+    // Fetch user with necessary fields
     const user = await User.findById(userId);
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // ────────────────────────────────────────────────────────
+    // Determine final shipping address (priority order)
+    // 1. Override from request body (user explicitly provided)
+    // 2. Last known geolocation address (automatic update)
+    // 3. Saved profile address (fallback)
+    // ────────────────────────────────────────────────────────
+    let finalShippingAddress = overrideAddress?.trim();
+
+    // Prefer geolocation if no override was given
+    if (!finalShippingAddress && user.lastKnownLocation?.address?.trim()) {
+      finalShippingAddress = user.lastKnownLocation.address.trim();
+    }
+
+    // Ultimate fallback to saved profile address
+    if (!finalShippingAddress && user.address?.trim()) {
+      finalShippingAddress = user.address.trim();
+    }
+
+    // If still no valid address → reject order
+    if (!finalShippingAddress) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Shipping address is required. Please update your profile or enable location services.",
+      });
     }
 
     let orderItems = [];
@@ -62,7 +75,7 @@ exports.placeOrder = async (req, res) => {
     let isCartBased = false;
 
     // ────────────────────────────────────────────────────────
-    //   MODE 1: Cart-based Checkout (preferred if cart has items)
+    // MODE 1: Cart-based Checkout
     // ────────────────────────────────────────────────────────
     if (user.cart && user.cart.length > 0) {
       isCartBased = true;
@@ -102,14 +115,15 @@ exports.placeOrder = async (req, res) => {
     }
 
     // ────────────────────────────────────────────────────────
-    //   MODE 2: Direct Buy / Buy Now (single product)
+    // MODE 2: Direct Buy / Buy Now (single product)
     // ────────────────────────────────────────────────────────
     else if (productId) {
       const product = await Product.findById(productId);
       if (!product) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Product not found" });
+        return res.status(404).json({
+          success: false,
+          message: "Product not found",
+        });
       }
 
       const qty = Number(quantity);
@@ -150,15 +164,6 @@ exports.placeOrder = async (req, res) => {
       });
     }
 
-    // Use user's saved address or override from body
-    const shippingAddress = overrideAddress?.trim() || user.address;
-    if (!shippingAddress) {
-      return res.status(400).json({
-        success: false,
-        message: "Shipping address is required. Update profile or provide one.",
-      });
-    }
-
     const totalAmount = subtotal + Number(shippingCost);
 
     // Create the order
@@ -166,7 +171,7 @@ exports.placeOrder = async (req, res) => {
       user: userId,
       items: orderItems,
       totalAmount,
-      shippingAddress,
+      shippingAddress: finalShippingAddress,
       shippingCost: Number(shippingCost),
       status: "PENDING",
       paymentMethod: "PAY_ON_DELIVERY",
@@ -192,14 +197,8 @@ exports.placeOrder = async (req, res) => {
       })
       .populate("user", "userName email phone");
 
-    // ────────────────────────────────────────────────────────
-    //  Send Order Confirmation Email to User
-    // ────────────────────────────────────────────────────────
+    // Send emails
     await sendOrderConfirmationToUser(populatedOrder);
-
-    // ────────────────────────────────────────────────────────
-    //  Send New Order Notification to Admin
-    // ────────────────────────────────────────────────────────
     await sendNewOrderNotificationToAdmin(populatedOrder);
 
     res.status(201).json({
@@ -212,6 +211,12 @@ exports.placeOrder = async (req, res) => {
         totalAmount,
         itemsCount: orderItems.reduce((sum, item) => sum + item.quantity, 0),
         mode: isCartBased ? "Cart-based" : "Direct Buy",
+        usedShippingAddress: finalShippingAddress,
+        addressSource: overrideAddress
+          ? "manual_override"
+          : user.lastKnownLocation?.address
+            ? "geolocation"
+            : "profile_saved",
       },
     });
   } catch (error) {
@@ -225,57 +230,50 @@ exports.placeOrder = async (req, res) => {
 };
 
 /**
- * @async
- * @function getAllOrders
- * @description Fetches every order in the database. Accessible only by Admins.
- * @access Private (Admin/SuperAdmin)
+ * Get all orders (admin only)
+ * @access Private (SuperAdmin)
  */
 exports.getAllOrders = async (req, res) => {
   try {
-    // 1. SuperAdmin check
-    const isSuperAdmin = req.user.role === "SUPERADMIN";
-    if (!isSuperAdmin) {
+    if (req.user.role !== "SUPERADMIN") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. SuperAdmin privileges required.",
+        message: "SuperAdmin access required",
       });
     }
 
-    // 2. Fetch all orders without filtering or pagination
     const orders = await Order.find()
       .populate({
         path: "items.product",
         select: "title productImages price",
       })
       .populate("user", "userName email phone")
-      .sort({ createdAt: -1 }); // Newest orders first
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
-      message: "Orders fetched successfully",
+      message: "All orders fetched successfully",
       count: orders.length,
       allOrders: orders,
     });
   } catch (error) {
-    console.error("❌ Get all orders error:", error);
+    console.error("Get all orders error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
     });
   }
 };
 
 /**
- * @async
- * @function getOrderById
- * @description Fetches details of a specific order. Accessible by Admin or the order owner.
- * @access Private (Owner/Admin)
+ * Get single order by ID
+ * @access Private (owner or admin)
  */
 exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.id;
-    const isSuperAdmin = req.user.role === "SUPERADMIN";
+    const isAdmin = req.user.role === "SUPERADMIN";
 
     const order = await Order.findById(orderId)
       .populate({
@@ -291,11 +289,10 @@ exports.getOrderById = async (req, res) => {
       });
     }
 
-    // 3. Authorization check: Must be the person who placed it OR an Admin
-    if (order.user._id.toString() !== userId && !isAdmin) {
+    if (order.user.toString() !== userId && !isAdmin) {
       return res.status(403).json({
         success: false,
-        message: "You are not authorized to view this order",
+        message: "Not authorized to view this order",
       });
     }
 
@@ -305,25 +302,22 @@ exports.getOrderById = async (req, res) => {
       order,
     });
   } catch (error) {
-    console.error("❌ Get order by ID error:", error);
+    console.error("Get order by ID error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
     });
   }
 };
 
 /**
- * @async
- * @function getUserOrders
- * @description Fetches all orders belonging to the authenticated user.
- * @access Private (Authenticated User)
+ * Get all orders for current user
+ * @access Private
  */
 exports.getUserOrders = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 4. Fetch all orders for this specific user only
     const orders = await Order.find({ user: userId })
       .populate({
         path: "items.product",
@@ -335,27 +329,21 @@ exports.getUserOrders = async (req, res) => {
       success: true,
       message: "User orders fetched successfully",
       count: orders.length,
-      myOrders: orders,
+      orders,
     });
   } catch (error) {
-    console.error("❌ Get user orders error:", error);
+    console.error("Get user orders error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
     });
   }
 };
 
 /**
- * @async
- * @function cancelOrder
- * @description Allows a user to cancel their own order.
- * Reverts product stock and updates status in both Order and User collections.
- * Sends cancellation confirmation emails to the user and notification to admin.
- * @access Private (Order Owner)
- * @body {string} reasonForCancel - The reason provided by the user for cancelling.
- * @param {import('express').Request} req - Express request object containing orderId in params.
- * @param {import('express').Response} res - Express response object.
+ * Cancel user's own order (PENDING only)
+ * @body {string} reasonForCancel
+ * @access Private (order owner)
  */
 exports.cancelOrder = async (req, res) => {
   try {
@@ -363,55 +351,49 @@ exports.cancelOrder = async (req, res) => {
     const { reasonForCancel } = req.body;
     const userId = req.user.id;
 
-    // 1. Validation: Check if reason is provided
     if (!reasonForCancel || reasonForCancel.trim().length < 5) {
       return res.status(400).json({
         success: false,
-        message:
-          "A valid reason for cancellation (min 5 characters) is required.",
+        message: "Cancellation reason required (min 5 characters)",
       });
     }
 
-    // 2. Find the order
     const order = await Order.findById(orderId);
-
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found." });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
-    // 3. Authorization: Only the owner can cancel
     if (order.user.toString() !== userId) {
       return res.status(403).json({
         success: false,
-        message: "You are not authorized to cancel this order.",
+        message: "You can only cancel your own orders",
       });
     }
 
-    // 4. Status Check: Can only cancel if PENDING
     if (order.status !== "PENDING") {
       return res.status(400).json({
         success: false,
-        message: `Cannot cancel order. It is already ${order.status}.`,
+        message: `Cannot cancel – order is ${order.status}`,
       });
     }
 
-    // 5. Revert Product Stock
+    // Restore stock
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.product, {
         $inc: { stock: item.quantity },
       });
     }
 
-    // 6. Update Order Document
     order.status = "CANCELLED";
-    order.paymentStatus = "CANCELLED"; // Since it's COD and not paid yet
-    order.reasonForCancel = reasonForCancel.trim(); // Save reason (add this field to Order schema if not exists)
-    order.cancelledAt = new Date(); // Optional: track cancellation time
+    order.paymentStatus = "CANCELLED";
+    order.reasonForCancel = reasonForCancel.trim();
+    order.cancelledAt = new Date();
     await order.save();
 
-    // 7. Synchronize User Order History
+    // Sync user order history
     await User.updateOne(
       { _id: userId, "orders.orderId": orderId },
       {
@@ -422,7 +404,6 @@ exports.cancelOrder = async (req, res) => {
       },
     );
 
-    // 8. Populate order for email content
     const populatedOrder = await Order.findById(order._id)
       .populate({
         path: "items.product",
@@ -430,21 +411,152 @@ exports.cancelOrder = async (req, res) => {
       })
       .populate("user", "userName email phone");
 
-    // 9. Send Cancellation Emails
     await sendOrderCancellationToUser(populatedOrder, reasonForCancel.trim());
     await sendOrderCancellationToAdmin(populatedOrder, reasonForCancel.trim());
 
     res.status(200).json({
       success: true,
-      message:
-        "Order cancelled successfully. Confirmation emails have been sent.",
+      message: "Order cancelled successfully!",
       orderStatus: order.status,
     });
   } catch (error) {
-    console.error("❌ Cancel order error:", error);
+    console.error("Cancel order error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Update order status and/or payment status (SuperAdmin only)
+ * @param {string} orderId
+ * @body {string} [status]           – e.g. "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"
+ * @body {string} [paymentStatus]    – e.g. "PENDING", "PAID"
+ * @access Private (SuperAdmin)
+ */
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    // Only SuperAdmin can update order status
+    if (req.user.role !== "SUPERADMIN") {
+      return res.status(403).json({
+        success: false,
+        message: "SuperAdmin access required",
+      });
+    }
+
+    const { orderId } = req.params;
+    const { status, paymentStatus } = req.body;
+
+    // At least one field must be provided
+    if (!status && !paymentStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "Provide at least one field: status or paymentStatus",
+      });
+    }
+
+    // Validate status if provided
+    const validStatuses = [
+      "PENDING",
+      "PROCESSING",
+      "SHIPPED",
+      "DELIVERED",
+      "CANCELLED",
+    ];
+    if (status && !validStatuses.includes(status.toUpperCase())) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed: ${validStatuses.join(", ")}`,
+      });
+    }
+
+    // Validate paymentStatus if provided
+    const validPaymentStatuses = ["PENDING", "PAID"];
+    if (
+      paymentStatus &&
+      !validPaymentStatuses.includes(paymentStatus.toUpperCase())
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid paymentStatus. Allowed: ${validPaymentStatuses.join(", ")}`,
+      });
+    }
+
+    const order = await Order.findById(orderId).populate(
+      "user",
+      "userName email",
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Optional: Prevent changing status after DELIVERED or CANCELLED
+    if (["DELIVERED", "CANCELLED"].includes(order.status) && status) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot change status of a ${order.status} order`,
+      });
+    }
+
+    // Apply updates
+    if (status) {
+      order.status = status.toUpperCase();
+    }
+    if (paymentStatus) {
+      order.paymentStatus = paymentStatus.toUpperCase();
+    }
+
+    // Optional: track who updated and when
+    order.updatedBy = req.user.id;
+    order.updatedAt = new Date();
+
+    await order.save();
+
+    // Sync to user's order history
+    await User.updateOne(
+      { _id: order.user, "orders.orderId": orderId },
+      {
+        $set: {
+          "orders.$.status": order.status,
+          "orders.$.paymentStatus": order.paymentStatus,
+        },
+      },
+    );
+
+    // Send email notification to user if status changed
+    if (status) {
+      await sendOrderStatusUpdateEmail?.(
+        order.user.email,
+        order.user.userName,
+        order._id,
+        order.status,
+        order.subject || "Your Order Status Update",
+      );
+    }
+
+    const populatedOrder = await Order.findById(order._id)
+      .populate({
+        path: "items.product",
+        select: "title productImages price",
+      })
+      .populate("user", "userName email phone");
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      updatedOrderStatus: populatedOrder,
+    });
+  } catch (error) {
+    console.error("Update order status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
       error: error.message,
     });
   }

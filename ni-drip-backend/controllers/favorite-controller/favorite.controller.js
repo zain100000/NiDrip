@@ -1,8 +1,8 @@
 /**
- * @file Favorite Controller
- * @description Manages user wishlists with dual-storage logic:
- * 1. Synchronizes with an independent 'Favorite' collection.
- * 2. Mirrors data within the 'User' document favorites array.
+ * @fileoverview Favorites / wishlist controller
+ * @module controllers/favoriteController
+ * @description Manages user favorites using separate Favorite collection
+ *              with sync to User.favorites array for fast profile reads.
  */
 
 const Favorite = require("../../models/favorite-model/favorite.model");
@@ -10,87 +10,107 @@ const User = require("../../models/user-model/user.model");
 const Product = require("../../models/product-model/product.model");
 
 /**
- * Helper: Synchronizes User document favorites array with the Favorite collection
+ * Helper: Sync Favorite collection → User.favorites array
+ * @param {string} userId
  */
 const syncUserFavorites = async (userId) => {
-  const allFavorites = await Favorite.find({ userId });
-  // Map to match the sub-document structure in your User Schema
-  const favoriteData = allFavorites.map((fav) => ({
+  const favorites = await Favorite.find({ userId }).populate("productId");
+  const favoriteData = favorites.map((fav) => ({
     productId: fav.productId,
     addedAt: fav.addedAt,
   }));
-  await User.findByIdAndUpdate(userId, { favorites: favoriteData });
+  await User.findByIdAndUpdate(
+    userId,
+    { favorites: favoriteData },
+    { new: true },
+  );
 };
 
 /**
- * Add product to favorites (Toggle-like behavior can be implemented, but this is a standard Add)
- * POST /api/favorite/add-to-favorite
+ * Add product to favorites
+ * @body { productId: string }
+ * @access Private
  */
 exports.addToFavorites = async (req, res) => {
   try {
     const { productId } = req.body;
-    const userId = req.user.id || req.user.userId;
+    const userId = req.user.id;
 
     if (!productId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Product ID is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required",
+      });
     }
 
-    // 1. Check if product exists
+    // Validate product exists
     const product = await Product.findById(productId);
     if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
     }
 
-    // 2. Check if already favorited
-    const existingFavorite = await Favorite.findOne({ userId, productId });
-    if (existingFavorite) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Product is already in favorites" });
+    // Prevent duplicates
+    const existing = await Favorite.findOne({ userId, productId });
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: "Product is already in your favorites",
+      });
     }
 
-    // 3. Save to Separate Collection
-    const favorite = new Favorite({ userId, productId });
+    // Create favorite entry
+    const favorite = new Favorite({
+      userId,
+      productId,
+      addedAt: new Date(),
+    });
     await favorite.save();
 
-    // 4. Sync to User Model
+    // Sync to User document
     await syncUserFavorites(userId);
+
+    // Return populated favorite
+    const populated = await Favorite.findById(favorite._id).populate(
+      "productId",
+    );
 
     res.status(201).json({
       success: true,
       message: "Added to favorites",
-      favorite,
+      favorite: populated,
     });
   } catch (error) {
-    console.error("Add Favorite Error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Server error", error: error.message });
+    console.error("Add to favorites error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add to favorites",
+      error: error.message,
+    });
   }
 };
 
 /**
  * Remove product from favorites
- * POST /api/favorite/remove-from-favorite
+ * @body { productId: string }
+ * @access Private
  */
 exports.removeFromFavorites = async (req, res) => {
   try {
     const { productId } = req.body;
-    const userId = req.user.id || req.user.userId;
+    const userId = req.user.id;
 
-    const result = await Favorite.deleteOne({ userId, productId });
+    const deleted = await Favorite.deleteOne({ userId, productId });
 
-    if (result.deletedCount === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Favorite not found" });
+    if (deleted.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found in favorites",
+      });
     }
 
-    // Sync to User Model
     await syncUserFavorites(userId);
 
     res.status(200).json({
@@ -98,34 +118,42 @@ exports.removeFromFavorites = async (req, res) => {
       message: "Removed from favorites",
     });
   } catch (error) {
-    console.error("Remove Favorite Error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Remove from favorites error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to remove from favorites",
+    });
   }
 };
 
 /**
- * Get all favorites for a user
- * GET /api/favorite/get-all-favorites
+ * Get all user's favorited products
+ * @access Private
  */
 exports.getFavorites = async (req, res) => {
   try {
-    const userId = req.user.id || req.user.userId;
+    const userId = req.user.id;
 
     const favorites = await Favorite.find({ userId })
       .populate({
         path: "productId",
-        select: "title price productImages status averageRating",
+        select: "title price productImages status averageRating stock",
       })
-      .sort({ createdAt: -1 });
+      .sort({ addedAt: -1 })
+      .lean(); // faster response
 
     res.status(200).json({
       success: true,
-      message: "Favorites fetched successfully",
+      message: "Favorites retrieved successfully",
       count: favorites.length,
       favorites,
     });
   } catch (error) {
-    console.error("Get Favorites Error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Get favorites error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch favorites",
+      error: error.message,
+    });
   }
 };

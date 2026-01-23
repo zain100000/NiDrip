@@ -1,15 +1,13 @@
 /**
- * @file Password management utilities
+ * @fileoverview Password utilities for secure handling
  * @module helpers/passwordHelper
- * @description Strong password validation, bcrypt hashing, and secure comparison.
  */
 
 const bcrypt = require("bcrypt");
 
 /**
- * Password regex for strong passwords
- * - Minimum 8 chars
- * - Uppercase, lowercase, number, special char
+ * Regex for strong password validation
+ * Requires: min 8 chars, uppercase, lowercase, number, special character
  * @type {RegExp}
  */
 exports.passwordRegex =
@@ -17,43 +15,45 @@ exports.passwordRegex =
 
 /**
  * Validate password strength
- * @param {string} password
+ * @param {string} password - Password to check
  * @returns {{ valid: boolean, message: string }}
  */
 exports.validatePasswordStrength = (password) => {
   if (!password || typeof password !== "string") {
     return { valid: false, message: "Password must be a non-empty string" };
   }
+
   if (!exports.passwordRegex.test(password)) {
     return {
       valid: false,
       message:
-        "Password must include uppercase, lowercase, number, special char, and be at least 8 chars long.",
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.",
     };
   }
-  return { valid: true, message: "Password is strong." };
+
+  return { valid: true, message: "Password meets strength requirements" };
 };
 
-/** Recommended bcrypt cost factor */
+/** Recommended bcrypt salt rounds */
 const SALT_ROUNDS = 12;
 
 /**
- * Hash a password using bcrypt
+ * Hash a password with bcrypt
  * @async
- * @param {string} password
- * @returns {Promise<string>}
+ * @param {string} password - Plaintext password
+ * @returns {Promise<string>} Hashed password
  */
 exports.hashPassword = async (password) => {
-  if (!password) throw new Error("Password is required for hashing.");
+  if (!password) throw new Error("Password is required for hashing");
   return bcrypt.hash(password, SALT_ROUNDS);
 };
 
 /**
- * Compare plaintext password with hashed password
+ * Compare plaintext password against hashed version
  * @async
- * @param {string} plain
- * @param {string} hashed
- * @returns {Promise<boolean>}
+ * @param {string} plain  - Plaintext password to check
+ * @param {string} hashed - Stored bcrypt hash
+ * @returns {Promise<boolean>} True if passwords match
  */
 exports.comparePassword = async (plain, hashed) => {
   if (!plain || !hashed) return false;

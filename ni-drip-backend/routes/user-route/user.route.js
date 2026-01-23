@@ -1,12 +1,11 @@
 /**
- * @fileoverview Express routes for regular User authentication and profile management.
+ * @fileoverview Express routes for regular user authentication & profile
  * @module routes/userRoutes
- * @description Provides endpoints for registration, login, profile retrieval,
- * profile updates, and account deletion.
  */
 
 const express = require("express");
 const router = express.Router();
+
 const userController = require("../../controllers/user-controller/user.controller");
 const {
   encryptedAuthMiddleware,
@@ -15,7 +14,9 @@ const {
 const cloudinaryUtility = require("../../utilities/cloudinary-utilitity/cloudinary.utility");
 
 /**
- * @desc Register a new regular user with optional profile picture
+ * @description Register new regular user (with optional profile picture)
+ * @route   POST /api/user/signup-user
+ * @access  Public
  */
 router.post(
   "/signup-user",
@@ -24,12 +25,16 @@ router.post(
 );
 
 /**
- * @desc Login user and return JWT token with session tracking
+ * @description Login user → returns encrypted JWT
+ * @route   POST /api/user/signin-user
+ * @access  Public
  */
 router.post("/signin-user", authLimiter, userController.loginUser);
 
 /**
- * @desc Get authenticated user's profile details
+ * @description Get user profile details
+ * @route   GET /api/user/get-user-by-id/:userId
+ * @access  Private (Authenticated user)
  */
 router.get(
   "/get-user-by-id/:userId",
@@ -38,7 +43,9 @@ router.get(
 );
 
 /**
- * @desc Update authenticated user's profile (name, phone, address, picture)
+ * @description Update user profile (name, phone, address, picture)
+ * @route   PATCH /api/user/update-user/:userId
+ * @access  Private (Authenticated user)
  */
 router.patch(
   "/update-user/:userId",
@@ -48,7 +55,9 @@ router.patch(
 );
 
 /**
- * @desc Permanently delete authenticated user's account and cleanup data
+ * @description Permanently delete user account
+ * @route   DELETE /api/user/delete-user/:userId
+ * @access  Private (Authenticated user)
  */
 router.delete(
   "/delete-user/:userId",
@@ -57,8 +66,22 @@ router.delete(
 );
 
 /**
- * @desc Logout user and invalidate session
+ * @description Logout user → invalidate session
+ * @route   POST /api/user/logout-user
+ * @access  Private (Authenticated user)
  */
 router.post("/logout-user", encryptedAuthMiddleware, userController.logoutUser);
+
+/**
+ * @description Update user location (latitude, longitude)
+ * @route   PATCH /api/user/update-user-location/:userId
+ * @access  Private (Authenticated user)
+ */
+
+router.patch(
+  "/update-user-location/:userId",
+  encryptedAuthMiddleware,
+  userController.updateUserLocation,
+);
 
 module.exports = router;

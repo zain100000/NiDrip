@@ -1,19 +1,20 @@
 /**
- * @fileoverview Express routes for Order
+ * @fileoverview Express routes for order management
  * @module routes/orderRoutes
- * @description Provides endpoints for:
- * - Placing an order (User Only)
  */
 
 const express = require("express");
 const router = express.Router();
+
 const orderController = require("../../controllers/order-controller/order.controller");
 const {
   encryptedAuthMiddleware,
 } = require("../../middlewares/auth-middleware/auth.middleware");
 
 /**
- * @desc Create a new order
+ * @description Place a new order
+ * @route POST /api/order/place-order
+ * @access Protected
  */
 router.post(
   "/place-order",
@@ -22,7 +23,9 @@ router.post(
 );
 
 /**
- * @desc Get all orders
+ * @description Get all orders
+ * @route GET /api/order/get-all-orders
+ * @access Protected
  */
 router.get(
   "/get-all-orders",
@@ -31,7 +34,9 @@ router.get(
 );
 
 /**
- * @desc Get order by ID
+ * @description Get details of a specific order by ID
+ * @route GET /api/order/get-order-by-id/:orderId
+ * @access Protected
  */
 router.get(
   "/get-order-by-id/:orderId",
@@ -40,7 +45,9 @@ router.get(
 );
 
 /**
- * @desc Get orders for logged-in user
+ * @description Get all orders belonging to the authenticated user
+ * @route GET /api/order/get-my-orders
+ * @access Protected
  */
 router.get(
   "/get-my-orders",
@@ -49,12 +56,25 @@ router.get(
 );
 
 /**
- * @desc Cancel an order
+ * @description Cancel an order (user-initiated, subject to status/policy checks)
+ * @route PUT /api/order/cancel-order/:orderId
+ * @access Protected
  */
 router.put(
-  "/cancel-order/:orderId",
+  "/action/cancel-order/:orderId",
   encryptedAuthMiddleware,
   orderController.cancelOrder,
+);
+
+/**
+ * @description Update the status of an order (admin-initiated)
+ * @route PUT /api/order/updated-order-status/:orderId
+ * @access Protected
+ */
+router.put(
+  "/action/update-order-status/:orderId",
+  encryptedAuthMiddleware,
+  orderController.updateOrderStatus,
 );
 
 module.exports = router;

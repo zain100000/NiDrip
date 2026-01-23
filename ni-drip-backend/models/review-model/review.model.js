@@ -1,14 +1,19 @@
 /**
- * @file Review controller
- * @description Controller module for managing the NIDRIP Review product.
- * Supports:
- * - Creating reviews for products by users
- * - Managing review status (PENDING, APPROVED, REJECTED)
- * @module controllers/reviewController
+ * @fileoverview Mongoose schema for product reviews
+ * @module models/reviewModel
  */
 
 const mongoose = require("mongoose");
 
+/**
+ * Schema for individual product reviews
+ * @typedef {Object} Review
+ * @property {ObjectId} user       - User who submitted the review
+ * @property {ObjectId} product    - Product being reviewed
+ * @property {string}   reviewText - The review content
+ * @property {Date}     createdAt
+ * @property {Date}     updatedAt
+ */
 const reviewSchema = new mongoose.Schema(
   {
     user: {
@@ -16,6 +21,7 @@ const reviewSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",

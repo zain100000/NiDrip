@@ -1,25 +1,19 @@
 /**
- * @fileoverview Cloudinary utility for handling image uploads only.
- * Supports:
- * - Image uploads (JPG, PNG, JPEG, WEBP)
- * - Multer memory storage
- * - Folder-based organization for NiDrip platform
+ * @fileoverview Cloudinary image upload and deletion utilities
+ * @module utilities/cloudinaryUtility
  */
 
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const path = require("path");
 
-// ---------------------------------------------------------------------------
-// CLOUDINARY CONFIGURATION
-// ---------------------------------------------------------------------------
-
+// Validate Cloudinary credentials
 if (
   !process.env.CLOUDINARY_CLOUD_NAME ||
   !process.env.CLOUDINARY_API_KEY ||
   !process.env.CLOUDINARY_API_SECRET
 ) {
-  throw new Error("Missing Cloudinary environment variables.");
+  throw new Error("Missing required Cloudinary environment variables");
 }
 
 cloudinary.config({
@@ -28,10 +22,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ---------------------------------------------------------------------------
-// ALLOWED IMAGE TYPES
-// ---------------------------------------------------------------------------
-
+/**
+ * Allowed MIME types for image uploads
+ * @type {string[]}
+ */
 const allowedImageTypes = [
   "image/jpeg",
   "image/png",
@@ -39,43 +33,43 @@ const allowedImageTypes = [
   "image/webp",
 ];
 
-// ---------------------------------------------------------------------------
-// MULTER FILE FILTER
-// ---------------------------------------------------------------------------
-
+/**
+ * Multer file filter – only allow supported image types
+ * @param {import('express').Request} req
+ * @param {import('multer').Express.Multer.File} file
+ * @param {import('multer').FileFilterCallback} cb
+ */
 const fileFilter = (req, file, cb) => {
-  if (!file) return cb(new Error("No file provided."), false);
+  if (!file) {
+    return cb(new Error("No file provided"), false);
+  }
 
   if (allowedImageTypes.includes(file.mimetype)) {
     return cb(null, true);
   }
 
-  return cb(new Error("Invalid file type. Allowed: JPG, PNG, WEBP."), false);
+  cb(new Error("Invalid file type. Allowed: JPG, PNG, WEBP"), false);
 };
 
-// ---------------------------------------------------------------------------
-// MULTER MEMORY STORAGE
-// ---------------------------------------------------------------------------
-
-const storage = multer.memoryStorage();
-
-// ---------------------------------------------------------------------------
-// MULTI-FIELD UPLOAD CONFIGURATION
-// ---------------------------------------------------------------------------
-
+/**
+ * Multer configuration: memory storage + file filter + size limit
+ * Supports multiple fields: profilePicture (1), productImage (up to 5)
+ * @type {import('multer').Multer}
+ */
 exports.upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 }).fields([
   { name: "profilePicture", maxCount: 1 },
   { name: "productImage", maxCount: 5 },
 ]);
 
-// ---------------------------------------------------------------------------
-// FOLDER ROUTING
-// ---------------------------------------------------------------------------
-
+/**
+ * Determine Cloudinary folder based on upload context
+ * @param {string} type - "profilePicture" | "productImage"
+ * @returns {string} Folder path under NiDrip/
+ */
 const getFolderForUploadType = (type) => {
   const base = "NiDrip";
 
@@ -89,38 +83,34 @@ const getFolderForUploadType = (type) => {
   }
 };
 
-// ---------------------------------------------------------------------------
-// IMAGE UPLOAD TO CLOUDINARY
-// ---------------------------------------------------------------------------
-
 /**
- * Uploads image to Cloudinary.
- *
- * @param {object} file - Multer file object
- * @param {string} type - Upload context
- * @param {string} [existingPublicId]
- * @returns {Promise<{url: string, publicId: string}>}
+ * Upload single image buffer to Cloudinary
+ * @async
+ * @param {import('multer').Express.Multer.File} file - Multer file object
+ * @param {string} type - Upload context ("profilePicture" | "productImage")
+ * @param {string} [existingPublicId] - Optional: overwrite existing image
+ * @returns {Promise<{ url: string, publicId: string }>} Secure URL and public_id
+ * @throws {Error} If upload fails or no file provided
  */
 exports.uploadToCloudinary = async (file, type, existingPublicId = null) => {
-  if (!file) throw new Error("No file provided for upload.");
+  if (!file) {
+    throw new Error("No file provided for upload");
+  }
 
   const folder = getFolderForUploadType(type);
 
+  let publicId = existingPublicId;
+
+  if (!publicId) {
+    const timestamp = Date.now();
+    const random = Math.round(Math.random() * 1e6);
+    const ext = path.extname(file.originalname).replace(".", "") || "jpg";
+    publicId = `${folder}/${timestamp}-${random}.${ext}`;
+  }
+
+  const fileBuffer = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+
   try {
-    let publicId = existingPublicId;
-
-    if (!publicId) {
-      const timestamp = Date.now();
-      const random = Math.round(Math.random() * 1e6);
-      const ext = path.extname(file.originalname).replace(".", "") || "jpg";
-
-      publicId = `${folder}/${timestamp}-${random}.${ext}`;
-    }
-
-    const fileBuffer = `data:${file.mimetype};base64,${file.buffer.toString(
-      "base64",
-    )}`;
-
     const result = await cloudinary.uploader.upload(fileBuffer, {
       public_id: publicId,
       resource_type: "image",
@@ -134,45 +124,41 @@ exports.uploadToCloudinary = async (file, type, existingPublicId = null) => {
     };
   } catch (err) {
     console.error("Cloudinary Upload Error:", err);
-    throw new Error("Failed to upload image to Cloudinary.");
+    throw new Error("Failed to upload image to Cloudinary");
   }
 };
 
-// ---------------------------------------------------------------------------
-// DELETE IMAGE FROM CLOUDINARY
-// ---------------------------------------------------------------------------
-
+/**
+ * Delete an image from Cloudinary using its secure_url
+ * @async
+ * @param {string} [fileUrl] - Cloudinary secure_url (or empty/no-op)
+ */
 exports.deleteFromCloudinary = async (fileUrl) => {
   if (!fileUrl) return;
 
   try {
     const url = new URL(fileUrl);
-
-    // Remove protocol, domain, /image/upload/ and version folder
     const pathParts = url.pathname.split("/").filter(Boolean);
 
-    // Find where 'upload' is, then take everything after it + version
     const uploadIndex = pathParts.indexOf("upload");
     if (uploadIndex === -1) return;
 
-    // From version folder onward
-    const afterUpload = pathParts.slice(uploadIndex + 1);
+    let afterUpload = pathParts.slice(uploadIndex + 1);
 
-    // Remove version folder (v123456...) if exists
+    // Skip version folder if present (v123456...)
     let startIndex = 0;
     if (afterUpload[0]?.startsWith("v") && !afterUpload[0].includes(".")) {
       startIndex = 1;
     }
 
-    // Now join the rest
     let publicId = afterUpload.slice(startIndex).join("/");
 
-    // Remove extension(s) — remove everything after last dot
+    // Remove file extension
     if (publicId.includes(".")) {
       publicId = publicId.substring(0, publicId.lastIndexOf("."));
-    }    
+    }
 
-    console.log("Attempting to delete public_id:", publicId);
+    console.log("Deleting Cloudinary public_id:", publicId);
 
     await cloudinary.uploader.destroy(publicId, {
       resource_type: "image",

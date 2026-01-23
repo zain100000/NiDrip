@@ -1,21 +1,20 @@
 /**
- * @fileoverview Mongoose schema for Support/Complaint management within the NIDRIP application.
+ * @fileoverview Mongoose schema for support tickets and complaints
  * @module models/supportModel
- * @description Represents a support ticket/complaint submission by users with tracking, status, and priority management.
  */
 
-const { MaxKey } = require("mongodb");
 const mongoose = require("mongoose");
 
 /**
- * @schema Support Schema
- * @description Schema representing a support ticket/complaint with:
- * - User attribution
- * - Complaint details (subject, description)
- * - Status tracking
- * - Priority management
- * - Response tracking
- * - Timestamps for lifecycle management
+ * Schema for support tickets / complaints
+ * @typedef {Object} Support
+ * @property {ObjectId} user         - Reference to the submitting user
+ * @property {string}   subject      - Short title of the issue
+ * @property {string}   description  - Detailed explanation of the problem
+ * @property {string}   status       - Current ticket status
+ * @property {string}   priority     - Urgency level
+ * @property {Date}     createdAt
+ * @property {Date}     updatedAt
  */
 const supportSchema = new mongoose.Schema(
   {
@@ -36,7 +35,7 @@ const supportSchema = new mongoose.Schema(
       type: String,
       required: [true, "Description is required"],
       minlength: [50, "Description must be at least 50 characters long"],
-        maxlength: [200, "Description cannot exceed 200 characters"],
+      maxlength: [200, "Description cannot exceed 200 characters"],
     },
 
     status: {
@@ -53,9 +52,6 @@ const supportSchema = new mongoose.Schema(
     },
   },
   {
-    /**
-     * Automatically include createdAt and updatedAt timestamps
-     */
     timestamps: true,
   },
 );

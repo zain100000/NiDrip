@@ -1,19 +1,21 @@
 /**
- * @fileoverview Mongoose schema for Product management within the NIDRIP application.
+ * @fileoverview Mongoose schema for products in the NIDRIP application
  * @module models/productModel
- * @description Represents a product entry including pricing, categorization, stock tracking, and attribution to the creating Super Admin.
  */
 
 const mongoose = require("mongoose");
 
 /**
- * Sub-schema for product ratings
+ * Sub-schema for individual rating
+ * @typedef {Object} Rating
+ * @property {ObjectId} user  - User who gave the rating
+ * @property {number}   stars - Rating value (1–5)
  */
 const ratingSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Customer model
+      ref: "User",
       required: true,
     },
     stars: {
@@ -27,19 +29,18 @@ const ratingSchema = new mongoose.Schema(
 );
 
 /**
- * Sub-schema for product review
+ * Sub-schema for individual review
+ * @typedef {Object} Review
+ * @property {ObjectId} user       - User who wrote the review
+ * @property {string}   reviewText - Review text content
  */
 const reviewSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Customer model
+      ref: "User",
       required: true,
     },
-
-    /**
-     * text review/message from the user
-     */
     reviewText: {
       type: String,
       trim: true,
@@ -50,21 +51,27 @@ const reviewSchema = new mongoose.Schema(
 );
 
 /**
- * @schema ProductSchema
- * @description Schema representing a Product with:
- * - Visual assets (Image)
- * - Basic metadata (Title, Description)
- * - Financial data (Price)
- * - Inventory management (Stock)
- * - Categorization
- * - Admin attribution (addedBy)
+ * Schema for products
+ * @typedef {Object} Product
+ * @property {string[]}   productImages   - Array of image URLs (max 5)
+ * @property {string}     title           - Product title
+ * @property {string}     description     - Detailed product description
+ * @property {number}     price           - Unit price
+ * @property {string[]}   category        - List of categories
+ * @property {number}     stock           - Available stock quantity
+ * @property {string}     status          - ACTIVE or INACTIVE
+ * @property {Rating[]}   ratings         - Array of user ratings
+ * @property {number}     averageRating   - Calculated average rating
+ * @property {number}     totalRatings    - Total number of ratings
+ * @property {Review[]}   reviews         - Array of user reviews
+ * @property {number}     averageReview   - (Currently unused – possibly for future text-based scoring)
+ * @property {number}     totalReviews    - Total number of reviews
+ * @property {ObjectId}   addedBy         - SuperAdmin who created the product
+ * @property {Date}       createdAt
+ * @property {Date}       updatedAt
  */
 const productSchema = new mongoose.Schema(
   {
-    /**
-     * URL of the product image (stored in Cloudinary)
-     * @type {string|null}
-     */
     productImages: {
       type: [String],
       validate: {
@@ -73,39 +80,23 @@ const productSchema = new mongoose.Schema(
       },
     },
 
-    /**
-     * Display title of the product
-     * @type {string}
-     */
     title: {
       type: String,
       required: [true, "Product title is required"],
       trim: true,
     },
 
-    /**
-     * Detailed description of the product features/specs
-     * @type {string}
-     */
     description: {
       type: String,
       required: [true, "Product description is required"],
     },
 
-    /**
-     * Unit price of the product
-     * @type {number}
-     */
     price: {
       type: Number,
       required: [true, "Product price is required"],
       min: [0, "Price cannot be negative"],
     },
 
-    /**
-     * List of categories the product belongs to
-     * @type {string[]}
-     */
     category: {
       type: [String],
       required: [true, "At least one category is required"],
@@ -117,29 +108,18 @@ const productSchema = new mongoose.Schema(
       },
     },
 
-    /**
-     * Current inventory count
-     * @type {number}
-     */
     stock: {
       type: Number,
       default: 0,
       min: [0, "Stock cannot be negative"],
     },
 
-    /**
-     * Status of the product (ACTIVE/INACTIVE)
-     * @type {string}
-     */
     status: {
       type: String,
       enum: ["ACTIVE", "INACTIVE"],
       default: "ACTIVE",
     },
 
-    /**
-     * Ratings Section
-     */
     ratings: [ratingSchema],
 
     averageRating: {
@@ -152,9 +132,6 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
 
-    /**
-     * Review Section
-     */
     reviews: [reviewSchema],
 
     averageReview: {
@@ -167,11 +144,6 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
 
-    /**
-     * Reference to the SuperAdmin who created/added this product
-     * @type {mongoose.Schema.Types.ObjectId}
-     * @ref "SuperAdmin"
-     */
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SuperAdmin",
@@ -179,15 +151,8 @@ const productSchema = new mongoose.Schema(
     },
   },
   {
-    /**
-     * Automatically include createdAt and updatedAt timestamps
-     */
     timestamps: true,
   },
 );
 
-/**
- * Mongoose model for Product
- * @type {import('mongoose').Model}
- */
 module.exports = mongoose.model("Product", productSchema);

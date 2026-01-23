@@ -1,15 +1,11 @@
 /**
- * @fileoverview Express routes for Super Admin authentication and profile management
+ * @fileoverview Express routes for SuperAdmin authentication & management
  * @module routes/superAdminRoutes
- * @description Provides endpoints for:
- *  - Super Admin registration
- *  - Login with AES-256-GCM encrypted JWT
- *  - Fetching Super Admin details by ID
- *  - Logout with session invalidation
  */
 
 const express = require("express");
 const router = express.Router();
+
 const superAdminController = require("../../controllers/super-admin-controller/super-admin.controller");
 const {
   encryptedAuthMiddleware,
@@ -18,7 +14,9 @@ const {
 const cloudinaryUtility = require("../../utilities/cloudinary-utilitity/cloudinary.utility");
 
 /**
- * @description Registers a new Super Admin with optional profile picture upload.
+ * @description Register new SuperAdmin (with optional profile picture)
+ * @route   POST /api/superadmin/signup-super-admin
+ * @access  Public (should be restricted in production)
  */
 router.post(
   "/signup-super-admin",
@@ -27,8 +25,9 @@ router.post(
 );
 
 /**
- 
- * @description Logs in a Super Admin and returns AES-256-GCM encrypted JWT.  
+ * @description Login SuperAdmin → returns encrypted JWT
+ * @route   POST /api/superadmin/signin-super-admin
+ * @access  Public
  */
 router.post(
   "/signin-super-admin",
@@ -37,8 +36,9 @@ router.post(
 );
 
 /**
- 
- * @description Retrieves Super Admin details by ID (excluding password and internal fields).  
+ * @description Get SuperAdmin profile details
+ * @route   GET /api/superadmin/get-super-admin-by-id/:superAdminId
+ * @access  Private (SuperAdmin)
  */
 router.get(
   "/get-super-admin-by-id/:superAdminId",
@@ -47,8 +47,9 @@ router.get(
 );
 
 /**
- 
- * @description Logs out a Super Admin, invalidates the session, and clears JWT cookie.  
+ * @description Logout → invalidate session
+ * @route   POST /api/superadmin/logout-super-admin
+ * @access  Private (SuperAdmin)
  */
 router.post(
   "/logout-super-admin",

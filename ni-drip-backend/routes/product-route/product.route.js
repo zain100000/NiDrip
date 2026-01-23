@@ -1,16 +1,11 @@
 /**
- * @fileoverview Express routes for Product Management
+ * @fileoverview Express routes for product management
  * @module routes/productRoutes
- * @description Provides endpoints for:
- * - Product Creation (Admin Only)
- * - Fetch All Products
- * - Fetch Product By Id
- * - Update Product By Id (Admin Only)
- * - Delete Product By Id (Admin Only)
  */
 
 const express = require("express");
 const router = express.Router();
+
 const productController = require("../../controllers/product-controller/product.controller");
 const {
   encryptedAuthMiddleware,
@@ -18,27 +13,35 @@ const {
 const cloudinaryUtility = require("../../utilities/cloudinary-utilitity/cloudinary.utility");
 
 /**
- * @desc Create a new product with image upload
+ * @description Create a new product (with multiple image upload support)
+ * @route   POST /api/product/add-product
+ * @access  Private (SuperAdmin)
  */
 router.post(
   "/add-product",
   encryptedAuthMiddleware,
-  cloudinaryUtility.upload, // Handles productImage field
+  cloudinaryUtility.upload,
   productController.addProduct,
 );
 
 /**
- * @desc Retrieve all products (Public access for Users)
+ * @description Get all products
+ * @route   GET /api/product/get-all-products
+ * @access  Public
  */
 router.get("/get-all-products", productController.getAllProducts);
 
 /**
- * @desc  Retrieve a single product's details
+ * @description Get single product details by ID
+ * @route   GET /api/product/get-product-by-id/:productId
+ * @access  Public
  */
 router.get("/get-product-by-id/:productId", productController.getProductById);
 
 /**
- * @desc Update product
+ * @description Update product details and/or images
+ * @route   PATCH /api/product/update-product/:productId
+ * @access  Private (SuperAdmin)
  */
 router.patch(
   "/update-product/:productId",
@@ -48,7 +51,9 @@ router.patch(
 );
 
 /**
- * @desc Remove product
+ * @description Delete a product (and associated images if implemented)
+ * @route   DELETE /api/product/delete-product/:productId
+ * @access  Private (SuperAdmin)
  */
 router.delete(
   "/delete-product/:productId",

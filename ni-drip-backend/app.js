@@ -70,7 +70,7 @@ const orderRoute = require("./routes/order-route/order.route");
 // API Routes
 // ==================================================
 app.use("/api/super-admin", superAdminRoute);
-app.use("/api/password", sharedPasswordResetRoute);
+app.use("/api/auth", sharedPasswordResetRoute);
 app.use("/api/product", productRoute);
 app.use("/api/user", userRoute);
 app.use("/api/cart", cartRoute);

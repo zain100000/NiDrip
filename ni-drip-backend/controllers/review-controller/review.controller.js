@@ -1,61 +1,61 @@
 /**
- * @file Review controller
- * @description Manages product reviews across both the Review collection and the Product's embedded review array.
+ * @fileoverview Review controller – manages product reviews
  * @module controllers/reviewController
+ * @description Handles review CRUD with sync to Product.embedded reviews array.
  */
 
 const Review = require("../../models/review-model/review.model");
 const Product = require("../../models/product-model/product.model");
 
 /**
- * @async
- * @function addReview
- * @description Creates a new review in the Review collection and pushes it to the Product's internal reviews array.
- * @param {import('express').Request} req - Express request object.
- * @param {import('express').Response} res - Express response object.
- * @returns {Promise<void>}
+ * Add new review
+ * @body {string} productId
+ * @body {string} reviewText
+ * @access Private
  */
 exports.addReview = async (req, res) => {
   try {
     const { productId, reviewText } = req.body;
     const userId = req.user.id;
 
-    // 1. Create entry in the separate Review collection
-    const newReview = await Review.create({
+    if (!productId || !reviewText?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID and review text required",
+      });
+    }
+
+    const review = await Review.create({
       user: userId,
       product: productId,
-      reviewText,
+      reviewText: reviewText.trim(),
     });
 
-    // 2. Synchronize: Push to Product's embedded array and increment count
     await Product.findByIdAndUpdate(productId, {
       $inc: { totalReviews: 1 },
-      $push: {
-        reviews: {
-          user: userId,
-          reviewText: reviewText,
-        },
-      },
+      $push: { reviews: { user: userId, reviewText: reviewText.trim() } },
     });
 
     res.status(201).json({
       success: true,
-      message: "Review added successfully",
-      newReview,
+      message: "Review submitted successfully",
+      newReview: review,
     });
   } catch (error) {
-    console.error("❌ Add Review Error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Add review error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
   }
 };
 
 /**
- * @async
- * @function updateReview
- * @description Updates an existing review text in both the Review collection and the Product's internal array.
- * @param {import('express').Request} req - Express request object containing reviewId in params.
- * @param {import('express').Response} res - Express response object.
- * @returns {Promise<void>}
+ * Update existing review
+ * @param {string} reviewId
+ * @body {string} reviewText
+ * @access Private (author)
  */
 exports.updateReview = async (req, res) => {
   try {
@@ -63,112 +63,117 @@ exports.updateReview = async (req, res) => {
     const { reviewText } = req.body;
     const userId = req.user.id;
 
-    // 1. Update in the Review collection
-    const updatedReview = await Review.findOneAndUpdate(
-      { _id: reviewId, user: userId },
-      { reviewText },
-      { new: true, runValidators: true },
-    );
-
-    if (!updatedReview) {
-      return res.status(404).json({
+    if (!reviewText?.trim()) {
+      return res.status(400).json({
         success: false,
-        message: "Review not found or user unauthorized.",
+        message: "Review text required",
       });
     }
 
-    // 2. Synchronize: Update the matching element in the Product's reviews array
-    // Uses the positional operator ($) to update the specific sub-document
+    const updated = await Review.findOneAndUpdate(
+      { _id: reviewId, user: userId },
+      { reviewText: reviewText.trim() },
+      { new: true, runValidators: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found or not authorized",
+      });
+    }
+
     await Product.updateOne(
-      { _id: updatedReview.product, "reviews.user": userId },
-      { $set: { "reviews.$.reviewText": reviewText } },
+      { _id: updated.product, "reviews.user": userId },
+      { $set: { "reviews.$.reviewText": reviewText.trim() } },
     );
 
     res.status(200).json({
       success: true,
       message: "Review updated successfully",
-      updatedReview,
+      updatedReview: updated,
     });
   } catch (error) {
-    console.error("❌ Update Review Error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Update review error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };
 
 /**
- * @async
- * @function deleteReview
- * @description Removes a review from the collection and pulls it from the Product's internal array.
- * @param {import('express').Request} req - Express request object containing reviewId in params.
- * @param {import('express').Response} res - Express response object.
- * @returns {Promise<void>}
+ * Delete review
+ * @param {string} reviewId
+ * @access Private (author or SuperAdmin)
  */
 exports.deleteReview = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.reviewId);
-
-    if (!review) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Review not found." });
-    }
-
-    // Authorization: Only author or SUPERADMIN can delete
-    const isAuthor = review.user.toString() === req.user.id;
+    const { reviewId } = req.params;
+    const userId = req.user.id;
     const isAdmin = req.user.role === "SUPERADMIN";
 
-    if (!isAuthor && !isAdmin) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Unauthorized action." });
+    const review = await Review.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    if (review.user.toString() !== userId && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this review",
+      });
     }
 
     const productId = review.product;
-    const reviewAuthorId = review.user;
 
-    // 1. Delete from Review collection
     await review.deleteOne();
 
-    // 2. Synchronize: Remove from Product array and decrement count
     await Product.findByIdAndUpdate(productId, {
       $inc: { totalReviews: -1 },
-      $pull: { reviews: { user: reviewAuthorId } },
+      $pull: { reviews: { user: review.user } },
     });
 
     res.status(200).json({
       success: true,
-      message: "Review deleted successfully.",
+      message: "Review deleted successfully",
     });
   } catch (error) {
-    console.error("❌ Delete Review Error:", error);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Delete review error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };
 
 /**
- * @async
- * @function getAllReviews
- * @description Fetches all reviews for a specific product from the Review collection.
- * @param {import('express').Request} req - Express request object containing productId in params.
- * @param {import('express').Response} res - Express response object.
- * @returns {Promise<void>}
+ * Get all reviews for a product
+ * @param {string} productId
+ * @access Public
  */
 exports.getAllReviews = async (req, res) => {
   try {
     const { productId } = req.params;
 
     const reviews = await Review.find({ product: productId })
-      .populate("user", "userName profileImage")
+      .populate("user", "userName profilePicture")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       message: "Reviews fetched successfully",
       count: reviews.length,
-      reviews,
+      allReviews: reviews,
     });
   } catch (error) {
-    console.error("❌ Fetch Reviews Error:", error);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Get reviews error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };

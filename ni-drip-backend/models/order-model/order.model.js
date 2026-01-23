@@ -1,20 +1,29 @@
 /**
- * @fileoverview Mongoose schema for Order management.
+ * @fileoverview Mongoose schema for orders / completed purchases
  * @module models/orderModel
- * @description Represents a finalized transaction, including items purchased,
- * shipping details, and payment tracking.
  */
 
 const mongoose = require("mongoose");
 
 /**
- * @schema OrderSchema
+ * Schema for orders
+ * @typedef {Object} Order
+ * @property {ObjectId} user           - Reference to the customer
+ * @property {Array}    items          - List of purchased products
+ * @property {ObjectId} items.product  - Reference to Product
+ * @property {number}   items.quantity - Quantity purchased
+ * @property {number}   items.priceAtPurchase - Price at time of checkout
+ * @property {number}   totalAmount    - Final total (items + shipping)
+ * @property {string}   shippingAddress - Full delivery address
+ * @property {number}   shippingCost   - Shipping fee
+ * @property {string}   status         - Order fulfillment status
+ * @property {string}   paymentMethod  - Payment method used
+ * @property {string}   paymentStatus  - Payment completion status
+ * @property {Date}     createdAt
+ * @property {Date}     updatedAt
  */
 const orderSchema = new mongoose.Schema(
   {
-    /**
-     * The customer who placed the order
-     */
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -22,9 +31,6 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
 
-    /**
-     * List of products purchased
-     */
     items: [
       {
         product: {
@@ -40,52 +46,36 @@ const orderSchema = new mongoose.Schema(
         priceAtPurchase: {
           type: Number,
           required: true,
-          description: "Price of the product at the exact moment of checkout",
         },
       },
     ],
 
-    /**
-     * Financial Totals
-     */
     totalAmount: {
       type: Number,
       required: true,
       min: 0,
     },
 
-    /**
-     * Shipping Information
-     */
     shippingAddress: {
       type: String,
       required: [true, "Shipping address is required for delivery"],
     },
 
-    /**
-     * Shipping Cost
-     */
     shippingCost: {
       type: Number,
       required: [true, "Shipping cost is required"],
       min: 0,
     },
 
-    /**
-     * Order Fulfillment Status
-     */
     status: {
       type: String,
       enum: ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"],
       default: "PENDING",
     },
 
-    /**
-     * Payment Information
-     */
     paymentMethod: {
       type: String,
-      enum: ["PAY_ON_DELIVERY"], // COD = Cash on Delivery
+      enum: ["PAY_ON_DELIVERY"],
       default: "PAY_ON_DELIVERY",
     },
 
@@ -100,8 +90,4 @@ const orderSchema = new mongoose.Schema(
   },
 );
 
-/**
- * Mongoose model for Order
- * @type {import('mongoose').Model}
- */
 module.exports = mongoose.model("Order", orderSchema);

@@ -1,13 +1,6 @@
 /**
- * @file Centralized security middleware configuration for Oloha backend
+ * @fileoverview Security middleware configuration for Express app
  * @module middlewares/securityMiddleware
- * @description Implements best-practice security hardening including:
- * - HTTPS enforcement
- * - Helmet headers + CSP
- * - CORS hardening
- * - HTTP Parameter Pollution protection
- * - Rate limiting and slowdown
- * - Response compression
  */
 
 const helmet = require("helmet");
@@ -18,26 +11,27 @@ const slowDown = require("express-slow-down");
 const compression = require("compression");
 
 /**
- * Apply security middleware to Express app
- * @param {import('express').Express} app
+ * Apply security hardening middleware stack
+ * @param {import('express').Express} app - Express application instance
  */
 exports.securityMiddleware = (app) => {
-  // Enforce HTTPS in production
+  // Force HTTPS in production
   if (process.env.NODE_ENV === "production") {
     app.use((req, res, next) => {
       if (
         req.headers["x-forwarded-proto"] !== "https" &&
         req.protocol !== "https"
       ) {
-        return res
-          .status(403)
-          .json({ success: false, message: "HTTPS Required in Production" });
+        return res.status(403).json({
+          success: false,
+          message: "HTTPS required in production",
+        });
       }
       next();
     });
   }
 
-  // Helmet for secure headers + CSP
+  // Secure headers + CSP via Helmet
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -56,7 +50,7 @@ exports.securityMiddleware = (app) => {
       crossOriginOpenerPolicy: { policy: "same-origin" },
       crossOriginEmbedderPolicy: false,
       referrerPolicy: { policy: "no-referrer" },
-    })
+    }),
   );
 
   // CORS configuration
@@ -71,40 +65,41 @@ exports.securityMiddleware = (app) => {
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    })
+    }),
   );
 
-  // Convert req.query to writable object
+  // Make req.query writable (required for some hpp edge cases)
   app.use((req, res, next) => {
     req.query = { ...req.query };
     next();
   });
 
-  // HTTP Parameter Pollution protection
+  // Prevent HTTP Parameter Pollution
   app.use(hpp());
 
-  // Rate limiting
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      success: false,
-      message: "Too many requests from this IP. Please try again later.",
-    },
-  });
-  app.use(limiter);
+  // Global rate limiting
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: {
+        success: false,
+        message: "Too many requests from this IP. Please try again later.",
+      },
+    }),
+  );
 
-  // Slow down after threshold
+  // Slow down requests after threshold (anti-brute-force / scraping)
   app.use(
     slowDown({
       windowMs: 15 * 60 * 1000,
       delayAfter: 50,
       delayMs: () => 500,
-    })
+    }),
   );
 
-  // Response compression
+  // Compress responses
   app.use(compression());
 };

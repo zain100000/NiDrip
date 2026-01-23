@@ -1,46 +1,51 @@
 /**
- * @fileoverview Mongoose schema for User management.
+ * @fileoverview Mongoose schema for customer users
  * @module models/userModel
- * @description Represents a customer user with e-commerce features including cart, favorites,
- * order history, and product library. Includes security features like login tracking and account lockout.
  */
 
 const mongoose = require("mongoose");
 
 /**
- * @schema UserSchema
- * @description Schema representing a User with:
- * - Profile metadata & Contact info
- * - Authentication credentials
- * - Shopping Cart & Favorites management
- * - Order history & Digital Product Library
- * - Security tracking (Login attempts, Lockout, Session management)
+ * Schema for user accounts
+ * @typedef {Object} User
+ * @property {string|null}   profilePicture           - URL to profile image
+ * @property {string}        userName                 - Display name
+ * @property {string}        email                    - Unique login email
+ * @property {string}        password                 - Hashed password
+ * @property {Object}        phone                    - Structured phone with country code
+ * @property {string}        phone.countryCode        - e.g. +92, +1, +44
+ * @property {string}        phone.phoneNumber        - Local number without country code
+ * @property {string}        [phone.fullPhone]        - Virtual: full international number
+ * @property {string|null}   address                  - Shipping/delivery address
+ * @property {string}        role                     - Always "USER"
+ * @property {boolean}       isActive                 - Account active status
+ * @property {Array}         cart                     - Embedded shopping cart items
+ * @property {Array}         favorites                - Favorited products
+ * @property {Array}         orders                   - Summary of order history
+ * @property {Date|null}     lastLogin                - Last successful login time
+ * @property {number}        loginAttempts            - Failed login counter
+ * @property {Date|null}     lockUntil                - Account lock expiration
+ * @property {string|null}   sessionId                - Active session identifier
+ * @property {string|null}   passwordResetToken       - Reset token
+ * @property {Date|null}     passwordResetExpires     - Reset token expiration
+ * @property {Object}        lastKnownLocation        - Last known geolocation
+ * @property {string}        [preferredCity]          - User's preferred delivery city (with flag)
+ * @property {Date}          createdAt
+ * @property {Date}          updatedAt
  */
 const userSchema = new mongoose.Schema(
   {
-    /**
-     * Profile picture URL
-     * @type {string|null}
-     */
     profilePicture: {
       type: String,
       default: null,
     },
 
-    /**
-     * Display name of the User
-     * @type {string}
-     */
     userName: {
       type: String,
       required: true,
       trim: true,
     },
 
-    /**
-     * Email address (used for login)
-     * @type {string}
-     */
     email: {
       type: String,
       required: true,
@@ -49,125 +54,131 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    /**
-     * Hashed password
-     * @type {string}
-     */
+    // Inside userSchema definition
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    emailVerificationToken: {
+      type: String,
+      default: null,
+    },
+
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+    },
+
     password: {
       type: String,
       required: true,
     },
 
-    /**
-     * Physical address for shipping/billing
-     * @type {string}
-     */
+    // ────────────────────────────────────────────────
+    // Structured phone number with country code
+    // ────────────────────────────────────────────────
+    phone: {
+      countryCode: {
+        type: String,
+        default: null, // e.g. +92, +1, +44, +33, +49, +86
+        trim: true,
+      },
+      phoneNumber: {
+        type: String,
+        default: null, // local number without country code
+        trim: true,
+      },
+    },
+
+    // Virtual getter for full international phone
+    fullPhone: {
+      type: String,
+      get: function () {
+        if (!this.phone?.countryCode || !this.phone?.phoneNumber) return null;
+        return `${this.phone.countryCode}${this.phone.phoneNumber}`.replace(
+          /\s+/g,
+          "",
+        );
+      },
+    },
+
     address: {
       type: String,
       trim: true,
       default: null,
     },
 
-    /**
-     * Contact phone number
-     * @type {string}
-     */
-    phone: {
+    // Preferred delivery city (with emoji flag)
+    preferredCity: {
       type: String,
-      trim: true,
+      enum: [
+        // Europe
+        "🇬🇧 London, United Kingdom",
+        "🇫🇷 Paris, France",
+        "🇩🇪 Berlin, Germany",
+        // USA
+        "🇺🇸 New York, USA",
+        "🇺🇸 Los Angeles, USA",
+        "🇺🇸 Chicago, USA",
+        // Asia
+        "🇵🇰 Karachi, Pakistan",
+        "🇮🇳 Mumbai, India",
+        "🇨🇳 Beijing, China",
+      ],
       default: null,
     },
 
-    /**
-     * User role
-     * @type {string}
-     * @enum ["USER"]
-     */
     role: {
       type: String,
       enum: ["USER"],
       default: "USER",
     },
 
-    /**
-     * Active status of the account
-     * @type {boolean}
-     */
     isActive: {
       type: Boolean,
       default: true,
     },
 
-    /**
-     * Shopping cart items
-     */
     cart: [
       {
-        /**
-         * The user who owns this cart item
-         * @type {ObjectId}
-         * @ref "User"
-         */
         userId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
-          required: [true, "User is required"],
+          required: true,
           index: true,
         },
-
-        /**
-         * The product being added to cart
-         * @type {ObjectId}
-         * @ref "Product"
-         */
         productId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
-          required: [true, "Product is required"],
+          required: true,
           index: true,
         },
-
-        /**
-         * Quantity of this product in cart
-         * @type {number}
-         */
         quantity: {
           type: Number,
-          required: [true, "Quantity is required"],
-          min: [1, "Quantity must be at least 1"],
+          required: true,
+          min: 1,
           default: 1,
         },
-
-        /**
-         * Unit price of the product at the time it was added to cart
-         * @type {number}
-         */
         unitPrice: {
           type: Number,
-          required: [true, "Unit price is required"],
-          min: [0, "Unit price cannot be negative"],
+          required: true,
+          min: 0,
         },
-
-        /**
-         * Total price for this line item (quantity × unitPrice)
-         * @type {number}
-         */
         totalPrice: {
           type: Number,
           required: true,
-          min: [0, "Total price cannot be negative"],
+          min: 0,
         },
       },
     ],
 
-    /**
-     * User's wishlisted/favorite products
-     */
     favorites: [
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
+          required: true,
         },
         addedAt: {
           type: Date,
@@ -176,42 +187,23 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
-    /**
-     * Order history tracking
-     */
     orders: [
       {
-        /**
-         * Reference to the Order document
-         * @type {mongoose.Schema.Types.ObjectId}
-         * @ref "Order"
-         */
         orderId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Order",
           required: true,
         },
-        /**
-         * The user who placed the order (redundant but useful for quick indexing)
-         * @type {mongoose.Schema.Types.ObjectId}
-         * @ref "User"
-         */
         userId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
           required: true,
         },
-        /**
-         * Current status of the delivery
-         */
         status: {
           type: String,
           enum: ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"],
           default: "PENDING",
         },
-        /**
-         * Payment status tracking
-         */
         paymentStatus: {
           type: String,
           enum: ["PENDING", "PAID"],
@@ -224,44 +216,51 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
-    /**
-     * Security & Session Management
-     */
     lastLogin: {
       type: Date,
       default: null,
     },
+
     loginAttempts: {
       type: Number,
       default: 0,
     },
+
     lockUntil: {
       type: Date,
       default: null,
     },
+
     sessionId: {
       type: String,
       default: null,
     },
+
     passwordResetToken: {
       type: String,
       default: null,
     },
+
     passwordResetExpires: {
       type: Date,
       default: null,
     },
+
+    lastKnownLocation: {
+      latitude: { type: Number, default: null },
+      longitude: { type: Number, default: null },
+      address: { type: String, default: null },
+    },
   },
   {
-    /**
-     * Automatically include createdAt and updatedAt timestamps
-     */
     timestamps: true,
+    toJSON: { virtuals: true }, // include virtuals like fullPhone in JSON
+    toObject: { virtuals: true },
   },
 );
 
-/**
- * Mongoose model for User
- * @type {import('mongoose').Model}
- */
+// Ensure virtuals are included when converting to JSON/object
+userSchema.set("toJSON", { virtuals: true });
+userSchema.set("toObject", { virtuals: true });
+
 module.exports = mongoose.model("User", userSchema);

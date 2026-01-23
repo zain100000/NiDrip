@@ -1,15 +1,7 @@
 /**
- * @file Support Controller
- * @description Controller module for managing user support tickets / complaints.
- * Supports:
- * - Creating a new support ticket
- * - Getting all tickets of the authenticated user
- * - Getting a single ticket by ID (only if owned by user or admin)
- * - Updating ticket status & priority (admin only)
- * - Adding admin response / notes to a ticket
- * - Deleting/closing a ticket (user can close their own, admin can delete)
- *
+ * @fileoverview Support / ticket controller
  * @module controllers/supportController
+ * @description Manages user support tickets with email notifications.
  */
 
 const Support = require("../../models/support-model/support.model");
@@ -20,24 +12,21 @@ const {
 } = require("../../helpers/email-helper/email.helper");
 
 /**
- * Create a new support ticket / complaint
- * POST /api/support/create-ticket
- * Private access (authenticated user)
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Create new support ticket
+ * @body {string} subject
+ * @body {string} description
+ * @body {string} [priority="MEDIUM"]
+ * @access Private
  */
 exports.createTicket = async (req, res) => {
   try {
     const { subject, description, priority } = req.body;
     const userId = req.user.id;
 
-    if (!subject || !description) {
+    if (!subject?.trim() || !description?.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Subject and description are required",
+        message: "Subject and description required",
       });
     }
 
@@ -45,81 +34,69 @@ exports.createTicket = async (req, res) => {
       user: userId,
       subject: subject.trim(),
       description: description.trim(),
-      priority: priority || "MEDIUM",
+      priority: priority?.toUpperCase() || "MEDIUM",
     });
 
-    // ────────────────────────────────────────────────
-    //   IMPORTANT: Populate user for email (email + name)
-    // ────────────────────────────────────────────────
-    const populatedTicket = await Support.findById(ticket._id).populate(
+    const populated = await Support.findById(ticket._id).populate(
       "user",
       "userName email",
     );
 
-    const user = populatedTicket.user;
+    await sendTicketConfirmationToUser(
+      populated.user.email,
+      populated.user.userName,
+      ticket,
+    );
 
-    // 1. Send confirmation to the user who created the ticket
-    await sendTicketConfirmationToUser(user.email, user.userName, ticket);
-
-    // 2. Send notification to Super Admin(s)
-    await sendNewTicketNotificationToAdmin(populatedTicket);
+    await sendNewTicketNotificationToAdmin(populated);
 
     res.status(201).json({
       success: true,
       message:
-        "Ticket generated successfully. You will receive a confirmation email shortly.",
+        "Ticket created successfully. You will receive a confirmation email shortly.",
       newTicket: ticket,
     });
   } catch (error) {
-    console.error("Get my tickets error:", error);
+    console.error("Create ticket error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
     });
   }
 };
 
 /**
- * Get all support tickets (Admin/SuperAdmin only)
- * GET /api/support/all-tickets
- * Private access - Admin only
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Get all tickets (admin view)
+ * @query {string} [status]
+ * @query {string} [priority]
+ * @query {string} [userId]
+ * @query {number} [page=1]
+ * @query {number} [limit=20]
+ * @access Private (SuperAdmin)
  */
 exports.getAllTickets = async (req, res) => {
   try {
-    // Optional query filters (you can expand these later)
+    if (req.user.role !== "SUPERADMIN") {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access required",
+      });
+    }
+
     const { status, priority, userId, page = 1, limit = 20 } = req.query;
 
-    // Build filter object
     const filter = {};
+    if (status) filter.status = status.toUpperCase();
+    if (priority) filter.priority = priority.toUpperCase();
+    if (userId) filter.user = userId;
 
-    if (status) {
-      filter.status = status.toUpperCase();
-    }
-
-    if (priority) {
-      filter.priority = priority.toUpperCase();
-    }
-
-    if (userId) {
-      filter.user = userId;
-    }
-
-    // Pagination
     const skip = (Number(page) - 1) * Number(limit);
-    const pageLimit = Number(limit);
 
-    // Fetch tickets with user info populated
     const tickets = await Support.find(filter)
-      .populate("user", "userName email phone") // show basic user info
-      .sort({ createdAt: -1 }) // newest first
+      .populate("user", "userName email phone")
+      .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(pageLimit)
-      .select("-__v");
+      .limit(Number(limit));
 
     res.status(200).json({
       success: true,
@@ -130,27 +107,21 @@ exports.getAllTickets = async (req, res) => {
     console.error("Get all tickets error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
-      error: error.message,
+      message: "Server Error",
     });
   }
 };
 
 /**
- * Get a single support ticket by ID
- * GET /api/support/:ticketId
- * Private access (must be owner or admin)
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Get single ticket by ID
+ * @param {string} ticketId
+ * @access Private (owner or admin)
  */
 exports.getTicketById = async (req, res) => {
   try {
     const { ticketId } = req.params;
     const userId = req.user.id;
-    const isAdmin = req.user.role === "SUPERADMIN" || req.user.role === "USER";
+    const isAdmin = req.user.role === "SUPERADMIN";
 
     const ticket = await Support.findById(ticketId).populate(
       "user",
@@ -164,11 +135,10 @@ exports.getTicketById = async (req, res) => {
       });
     }
 
-    // Only allow owner or admin to view
     if (ticket.user.toString() !== userId && !isAdmin) {
       return res.status(403).json({
         success: false,
-        message: "You are not authorized to view this ticket",
+        message: "Not authorized to view this ticket",
       });
     }
 
@@ -181,26 +151,21 @@ exports.getTicketById = async (req, res) => {
     console.error("Get ticket error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
     });
   }
 };
 
 /**
- * Close / delete own ticket (user) or delete any ticket (admin)
- * DELETE /api/support/:ticketId
- * Private access
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Delete/close ticket
+ * @param {string} ticketId
+ * @access Private (owner or admin)
  */
 exports.deleteTicket = async (req, res) => {
   try {
     const { ticketId } = req.params;
     const userId = req.user.id;
-    const isAdmin = req.user.role === "SUPERADMIN" || req.user.role === "USER";
+    const isAdmin = req.user.role === "SUPERADMIN";
 
     const ticket = await Support.findById(ticketId);
 
@@ -228,52 +193,39 @@ exports.deleteTicket = async (req, res) => {
     console.error("Delete ticket error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
     });
   }
 };
 
-// ------------------------------- TICKET ACTIONS -------------------------------
-// ------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------
-
 /**
- * Update ticket status (SuperAdmin only)
- * PATCH /api/support/action/update-ticket-status/:ticketId
- * Private access - SuperAdmin only
- *
- * @async
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @returns {Promise<void>}
+ * Update ticket status (admin only)
+ * @param {string} ticketId
+ * @body {string} status
+ * @access Private (SuperAdmin)
  */
 exports.updateTicketStatus = async (req, res) => {
   try {
+    if (req.user.role !== "SUPERADMIN") {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access required",
+      });
+    }
+
     const { ticketId } = req.params;
     const { status } = req.body;
 
-    // Only allow SUPERADMIN to update status
-    const isAdmin = req.user.role === "SUPERADMIN";
-    if (!isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: "Only admins can update ticket status",
-      });
-    }
+    const valid = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
+    const newStatus = status?.toUpperCase();
 
-    // Validate status
-    const validStatuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
-    if (!status || !validStatuses.includes(status.toUpperCase())) {
+    if (!newStatus || !valid.includes(newStatus)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+        message: `Invalid status. Use: ${valid.join(", ")}`,
       });
     }
 
-    const normalizedStatus = status.toUpperCase();
-
-    // Find ticket
     const ticket = await Support.findById(ticketId).populate(
       "user",
       "userName email",
@@ -286,39 +238,35 @@ exports.updateTicketStatus = async (req, res) => {
       });
     }
 
-    // Prevent unnecessary updates
-    if (ticket.status === normalizedStatus) {
+    if (ticket.status === newStatus) {
       return res.status(200).json({
         success: true,
-        message: `Ticket is already in ${normalizedStatus} status`,
+        message: `Already ${newStatus}`,
         ticket,
       });
     }
 
-    // Update status
-    ticket.status = normalizedStatus;
+    ticket.status = newStatus;
     await ticket.save();
 
-    // Send email notification to the user
     await sendTicketStatusUpdateEmail(
       ticket.user.email,
       ticket.user.userName,
       ticket._id,
-      normalizedStatus,
+      newStatus,
       ticket.subject,
     );
 
     res.status(200).json({
       success: true,
-      message: `Ticket status updated to ${normalizedStatus}`,
-      updatedTicketStatus: ticket,
+      message: `Ticket status updated successfully to ${newStatus}`,
+      updatedStatus: newStatus,
     });
   } catch (error) {
     console.error("Update ticket status error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
-      error: error.message,
+      message: "Server Error",
     });
   }
 };

@@ -1,20 +1,20 @@
 /**
- * @fileoverview Express routes for Product Reviewing
- * @module routes/reviewRoutes
- * @description Provides endpoints for:
- * - Add or Update Product Review (Authenticated users)
- * - Fetch Product Reviews
+ * @fileoverview Express routes for support tickets
+ * @module routes/supportRoutes
  */
 
 const express = require("express");
 const router = express.Router();
+
 const supportController = require("../../controllers/support-controller/support.controller");
 const {
   encryptedAuthMiddleware,
 } = require("../../middlewares/auth-middleware/auth.middleware");
 
 /**
- * @desc Create ticket
+ * @description Create a new support ticket
+ * @route   POST /api/support/create-ticket
+ * @access  Private (Authenticated users)
  */
 router.post(
   "/create-ticket",
@@ -23,7 +23,9 @@ router.post(
 );
 
 /**
- * @desc Retrieve ticket by id
+ * @description Get details of a specific ticket
+ * @route   GET /api/support/get-ticket-by-id/:ticketId
+ * @access  Private (Ticket owner or SuperAdmin)
  */
 router.get(
   "/get-ticket-by-id/:ticketId",
@@ -32,7 +34,9 @@ router.get(
 );
 
 /**
- * @desc Retrieve all tickets
+ * @description Get all tickets (usually admin view)
+ * @route   GET /api/support/get-all-tickets
+ * @access  Private (SuperAdmin)
  */
 router.get(
   "/get-all-tickets",
@@ -41,7 +45,9 @@ router.get(
 );
 
 /**
- * @desc Delete ticket
+ * @description Delete a ticket
+ * @route   DELETE /api/support/delete-ticket/:ticketId
+ * @access  Private (SuperAdmin or ticket owner – check in controller)
  */
 router.delete(
   "/delete-ticket/:ticketId",
@@ -49,15 +55,12 @@ router.delete(
   supportController.deleteTicket,
 );
 
-// ------------------------------- TICKET ACTIONS -------------------------------
-// ------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------
-
 /**
- * @desc Update ticket status (SuperAdmin only)
+ * @description Update ticket status (e.g. OPEN → RESOLVED)
+ * @route   PATCH /api/support/action/update-ticket-status/:ticketId
+ * @access  Private (SuperAdmin)
  */
-router.patch(
+router.put(
   "/action/update-ticket-status/:ticketId",
   encryptedAuthMiddleware,
   supportController.updateTicketStatus,
