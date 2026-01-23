@@ -84,4 +84,23 @@ router.patch(
   userController.updateUserLocation,
 );
 
+/**
+ * @description Send email verification OTP to user email
+ * @route   POST /api/user/send-verification-email
+ * @access  Public
+ */
+
+router.post(
+  "/send-verification-email",
+  userController.requestEmailVerification,
+);
+
+/**
+ * @description Verify email using OTP
+ * @route   POST /api/user/verify-email
+ * @access  Public
+ */
+
+router.post("/verify-email", userController.verifyEmail);
+
 module.exports = router;
