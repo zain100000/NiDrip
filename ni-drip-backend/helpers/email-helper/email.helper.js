@@ -76,7 +76,6 @@ const getEmailTemplate = (content, title = "NIDRIP Notification") => `
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title}</title>
-  <!-- Full Inter font family with all weights and italic support -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
   <style>
     body {
@@ -87,10 +86,7 @@ const getEmailTemplate = (content, title = "NIDRIP Notification") => `
       line-height: 1.6;
       color: #333333;
     }
-    a {
-      color: #E32264;
-      text-decoration: none;
-    }
+    a { color: #E32264; text-decoration: none; }
     .container {
       max-width: 640px;
       margin: 0 auto;
@@ -114,11 +110,7 @@ const getEmailTemplate = (content, title = "NIDRIP Notification") => `
       height: 6px;
       background: linear-gradient(90deg, #ffffff33, transparent);
     }
-    .logo {
-      width: 160px;
-      height: auto;
-      margin-bottom: 16px;
-    }
+    .logo { width: 160px; height: auto; margin-bottom: 16px; }
     .brand-title {
       color: #ffffff;
       font-size: 36px;
@@ -178,12 +170,8 @@ const getEmailTemplate = (content, title = "NIDRIP Notification") => `
       margin-top: 24px;
     }
     @media (max-width: 600px) {
-      .main-content {
-        padding: 40px 32px;
-      }
-      .header {
-        padding: 40px 24px;
-      }
+      .main-content { padding: 40px 32px; }
+      .header { padding: 40px 24px; }
     }
   </style>
 </head>
@@ -198,8 +186,7 @@ const getEmailTemplate = (content, title = "NIDRIP Notification") => `
               src="https://res.cloudinary.com/dd524q9vc/image/upload/v1769081264/NiDrip/logo/logo_ny2do0.png" 
               alt="NIDRIP" 
               class="logo"
-            />
-            <h1 class="brand-title">NIDRIP</h1>
+            />            
           </div>
 
           <!-- Main Content -->
@@ -211,7 +198,7 @@ const getEmailTemplate = (content, title = "NIDRIP Notification") => `
           <div class="footer">
             <p class="footer-title">NIDRIP</p>
             <p class="footer-copy">
-              &copy; ${new Date().getFullYear()} <strong style="color:#E32264;">NIDRIP</strong>. All rights reserved.
+              © ${new Date().getFullYear()} <strong style="color:#E32264;">NIDRIP</strong>. All rights reserved.
             </p>
             <p class="footer-note">
               This is an automated message from NIDRIP.<br>
@@ -225,6 +212,17 @@ const getEmailTemplate = (content, title = "NIDRIP Notification") => `
 </body>
 </html>
 `;
+
+/**
+ * Helper to shorten ID to last 6 characters with # prefix
+ * @param {string} id - MongoDB ObjectId or string
+ * @returns {string} e.g. #ABC123
+ */
+const shortenId = (id) => {
+  if (!id) return "#------";
+  const str = id.toString();
+  return "#" + str.slice(-6);
+};
 
 /**
  * Get frontend URL for a specific user role
@@ -294,6 +292,8 @@ const sendPasswordResetEmail = async (toEmail, resetToken, role) => {
  * Send confirmation email to the user who created the ticket
  */
 const sendTicketConfirmationToUser = async (userEmail, userName, ticket) => {
+  const shortTicketId = shortenId(ticket._id);
+
   const content = `
     <h2 style="color:#E32264;font-size:30px;margin-bottom:20px;">Hello ${userName},</h2>
     <p style="font-size:17px;color:#444444;margin-bottom:32px;">
@@ -301,7 +301,7 @@ const sendTicketConfirmationToUser = async (userEmail, userName, ticket) => {
     </p>
     
     <div class="info-box">
-      <strong>Ticket ID:</strong> ${ticket._id}<br><br>
+      <strong>Ticket ID:</strong> ${shortTicketId}<br><br>
       <strong>Subject:</strong> ${ticket.subject}<br><br>
       <strong>Priority:</strong> <span style="color:#E32264;font-weight:700;">${ticket.priority}</span><br><br>
       <strong>Submitted:</strong> ${new Date(ticket.createdAt).toLocaleString()}
@@ -319,7 +319,7 @@ const sendTicketConfirmationToUser = async (userEmail, userName, ticket) => {
 
   await sendEmail({
     to: userEmail,
-    subject: `NIDRIP Support: Ticket Received [#${ticket._id}]`,
+    subject: `NIDRIP Support: Ticket Received ${shortTicketId}`,
     html: getEmailTemplate(content, "Support Ticket Confirmation"),
   });
 };
@@ -329,6 +329,7 @@ const sendTicketConfirmationToUser = async (userEmail, userName, ticket) => {
  */
 const sendNewTicketNotificationToAdmin = async (ticket) => {
   const adminEmail = process.env.EMAIL_USER || "support@nidrip.com";
+  const shortTicketId = shortenId(ticket._id);
 
   const content = `
     <h2 style="color:#E32264;font-size:30px;margin-bottom:20px;">New Support Ticket</h2>
@@ -338,7 +339,7 @@ const sendNewTicketNotificationToAdmin = async (ticket) => {
     </p>
     
     <div class="info-box">
-      <strong>Ticket ID:</strong> ${ticket._id}<br><br>
+      <strong>Ticket ID:</strong> ${shortTicketId}<br><br>
       <strong>User:</strong> ${ticket.user.userName} (${ticket.user.email})<br><br>
       <strong>Subject:</strong> ${ticket.subject}<br><br>
       <strong>Priority:</strong> <span style="color:#E32264;font-weight:700;">${ticket.priority}</span><br><br>
@@ -359,7 +360,7 @@ const sendNewTicketNotificationToAdmin = async (ticket) => {
 
   await sendEmail({
     to: adminEmail,
-    subject: `New Support Ticket [#${ticket._id}] - ${ticket.priority} Priority`,
+    subject: `New Support Ticket ${shortTicketId} - ${ticket.priority} Priority`,
     html: getEmailTemplate(content, "New Support Ticket Notification"),
   });
 };
@@ -374,6 +375,8 @@ const sendTicketStatusUpdateEmail = async (
   newStatus,
   subject,
 ) => {
+  const shortTicketId = shortenId(ticketId);
+
   const content = `
     <h2 style="color:#E32264;font-size:30px;margin-bottom:20px;">Ticket Status Update</h2>
     
@@ -386,7 +389,7 @@ const sendTicketStatusUpdateEmail = async (
     </p>
     
     <div class="info-box">
-      <strong>Ticket ID:</strong> ${ticketId}<br><br>
+      <strong>Ticket ID:</strong> ${shortTicketId}<br><br>
       <strong>Subject:</strong> ${subject}<br><br>
       <strong>New Status:</strong> <span style="color:#E32264;font-weight:700;font-size:18px;">${newStatus}</span><br><br>
       <strong>Updated on:</strong> ${new Date().toLocaleString()}
@@ -404,7 +407,7 @@ const sendTicketStatusUpdateEmail = async (
 
   await sendEmail({
     to: userEmail,
-    subject: `NIDRIP Support: Ticket [#${ticketId}] Updated to ${newStatus}`,
+    subject: `NIDRIP Support: Ticket ${shortTicketId} Updated to ${newStatus}`,
     html: getEmailTemplate(content, "Ticket Status Update"),
   });
 };
@@ -417,6 +420,8 @@ const sendTicketStatusUpdateEmail = async (
  * Send order confirmation email to the customer
  */
 const sendOrderConfirmationToUser = async (order) => {
+  const shortOrderId = shortenId(order._id);
+
   const itemsList = order.items
     .map(
       (item) => `
@@ -441,7 +446,7 @@ const sendOrderConfirmationToUser = async (order) => {
     </p>
     
     <div class="info-box">
-      <strong>Order ID:</strong> ${order._id}<br><br>
+      <strong>Order ID:</strong> ${shortOrderId}<br><br>
       <strong>Payment Method:</strong> ${order.paymentMethod}<br><br>
       <strong>Shipping Address:</strong><br>${order.shippingAddress.replace(/\n/g, "<br>")}
       <strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleString()}<br><br>
@@ -467,7 +472,7 @@ const sendOrderConfirmationToUser = async (order) => {
 
   await sendEmail({
     to: order.user.email,
-    subject: `NIDRIP Order Confirmed [#${order._id}]`,
+    subject: `NIDRIP Order Confirmed ${shortOrderId}`,
     html: getEmailTemplate(content, "Order Confirmation"),
   });
 };
@@ -476,7 +481,8 @@ const sendOrderConfirmationToUser = async (order) => {
  * Send new order notification to Admin
  */
 const sendNewOrderNotificationToAdmin = async (order) => {
-  const adminEmail = process.env.EMAIL_USER || "";
+  const adminEmail = process.env.EMAIL_USER || "support@nidrip.com";
+  const shortOrderId = shortenId(order._id);
 
   const itemsList = order.items
     .map(
@@ -497,7 +503,7 @@ const sendNewOrderNotificationToAdmin = async (order) => {
     </p>
     
     <div class="info-box">
-      <strong>Order ID:</strong> ${order._id}<br><br>
+      <strong>Order ID:</strong> ${shortOrderId}<br><br>
       <strong>Customer:</strong> ${order.user.userName} (${order.user.email})<br><br>
       <strong>Phone:</strong> ${order.user.phone || "Not provided"}<br><br>
       <strong>Total Amount:</strong> Rs. ${order.totalAmount.toLocaleString()}<br><br>
@@ -524,7 +530,7 @@ const sendNewOrderNotificationToAdmin = async (order) => {
 
   await sendEmail({
     to: adminEmail,
-    subject: `New Order [#${order._id}] - Rs. ${order.totalAmount.toLocaleString()}`,
+    subject: `New Order ${shortOrderId} - Rs. ${order.totalAmount.toLocaleString()}`,
     html: getEmailTemplate(content, "New Order Alert"),
   });
 };
