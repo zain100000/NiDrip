@@ -173,7 +173,7 @@ function getFrontendUrl(role) {
  */
 const sendPasswordResetEmail = async (toEmail, resetToken, role) => {
   const frontendUrl = getFrontendUrl(role);
-  const resetLink = `${frontendUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
+  const resetLink = `${frontendUrl}/auth/reset-password?token=${encodeURIComponent(resetToken)}`;
 
   const content = `
     <div style="text-align:center;max-width:520px;margin:0 auto;">
