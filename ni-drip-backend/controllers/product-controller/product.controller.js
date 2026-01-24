@@ -24,7 +24,15 @@ const {
  */
 exports.addProduct = async (req, res) => {
   try {
-    const { title, description, price, category, stock, status } = req.body;
+    const {
+      title,
+      description,
+      price,
+      category,
+      stock,
+      status,
+      specifications,
+    } = req.body;
 
     if (!req.files?.productImage?.length) {
       return res.status(400).json({
@@ -50,6 +58,7 @@ exports.addProduct = async (req, res) => {
       status: status || "ACTIVE",
       productImages: imageUrls,
       addedBy: req.user.id,
+      specifications: specifications ? JSON.parse(specifications) : [],
     });
 
     await product.save();

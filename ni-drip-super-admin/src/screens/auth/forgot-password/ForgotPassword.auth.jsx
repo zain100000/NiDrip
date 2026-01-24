@@ -18,12 +18,12 @@ import { useNavigate, NavLink } from "react-router-dom";
 import "../../../styles/global.styles.css";
 import "./ForgotPassword.auth.css";
 import Logo from "../../../assets/logo/logo.png";
-import InputField from "../../../utilities/InputField/InputField.utility";
-import Button from "../../../utilities/Button/Button.utility";
+import InputField from "../../../utilities/input-field/InputField.utility";
+import Button from "../../../utilities/button/Button.utility";
 import {
   validateEmail,
   validateFields,
-} from "../../../utilities/Validations/Validation.utility";
+} from "../../../utilities/validations/Validation.utility";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { forgotPassword } from "../../../redux/slices/auth.slice";

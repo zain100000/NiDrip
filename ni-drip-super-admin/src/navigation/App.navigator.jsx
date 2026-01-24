@@ -25,6 +25,10 @@ import ResetPassword from "../screens/auth/reset-password/ResetPassword.auth";
 // Dashboard
 import Dashboard from "../screens/dashboard/Main.dashboard";
 
+// Products Management
+import Products from "../screens/manage-products/products/Products";
+import ProductDetails from "../screens/manage-products/product-details/ProductDetails";
+
 // Not Found
 import NotFound from "../screens/not-found/Not-Found";
 
@@ -56,6 +60,13 @@ const AppNavigator = () => {
 
         {/* Dashboard Routes */}
         <Route path="dashboard" element={<Dashboard />} />
+
+        {/* Products Management */}
+        <Route path="products/manage-products" element={<Products />} />
+        <Route
+          path="products/manage-products/product-details/:productId"
+          element={<ProductDetails />}
+        />
       </Route>
 
       {/* Not Found Route */}

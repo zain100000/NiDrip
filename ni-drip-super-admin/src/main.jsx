@@ -70,7 +70,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               primary: "white",
               secondary: "rgba(9, 119, 82, 1)",
             },
-            duration: 3000,
+            duration: 1500,
           },
 
           error: {
@@ -85,7 +85,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               primary: "white",
               secondary: "rgba(239, 68, 68, 1)",
             },
-            duration: 4000,
+            duration: 1500,
           },
         }}
       />

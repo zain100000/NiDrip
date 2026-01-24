@@ -11,6 +11,9 @@
  * - `print`: Strips the navigation menu to allow for clean document printing.
  */
 
+/**
+ * @file Dashboard.layout.css
+ */
 @import url("../../styles/global.styles.css");
 
 /* Root layout */
@@ -22,47 +25,56 @@
   overflow: hidden;
 }
 
-/* Sidebar */
+/* Sidebar Container */
 .sidebar-container {
-  width: var(--sidebar-width, 250px);
-  background-color: var(--white);
-  border-right: 1px solid var(--gray-200);
-  box-shadow: var(--shadow-md);
-  z-index: 100;
-  padding: var(--spacing-md);
+  width: 280px; /* Match width with Sidebar utility */
+  background-color: var(--primary); /* Match background with Sidebar utility */
   flex-shrink: 0;
   transition: transform 0.3s ease;
+  z-index: 100;
+  overflow: hidden; /* Prevents double scrollbars */
 }
 
 /* Content Area */
 .content {
   flex: 1;
-  padding: var(--spacing-lg);
+  padding: 20px;
   overflow-y: auto;
-  background-color: var(--gray-50);
+  position: relative;
 }
 
-/* ======================
-   Mobile Behavior
-====================== */
+/* ADDED: Menu Toggle Button */
+.menu-toggle-btn {
+  display: none; /* Hidden on desktop */
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 5px;
+}
 
+/* Mobile Behavior (< 1024px) */
 @media (max-width: 1023px) {
+  .menu-toggle-btn {
+    display: block; /* Show on mobile */
+  }
+
   .sidebar-container {
     position: fixed;
     left: 0;
     top: 0;
     height: 100vh;
-    transform: translateX(-100%);
     width: 280px;
+    transform: translateX(-100%); /* Hide by default */
+    box-shadow: none;
   }
 
+  /* When open */
   .sidebar-container.sidebar-open {
-    transform: translateX(0);
-    box-shadow: var(--shadow-xl);
-  }
-
-  .content {
-    padding: var(--spacing-md);
+    transform: translateX(0); /* Slide in */
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
   }
 
   .sidebar-overlay {
@@ -70,29 +82,6 @@
     inset: 0;
     background-color: rgba(0, 0, 0, 0.4);
     z-index: 90;
-  }
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .sidebar-container,
-  .content {
-    transition: none;
-  }
-}
-
-/* Print */
-@media print {
-  .sidebar-container {
-    display: none;
-  }
-
-  .content {
-    padding: 0;
-    overflow: visible;
-  }
-
-  .dashboard-layout {
-    height: auto;
+    backdrop-filter: blur(2px); /* Optional: nice visual effect */
   }
 }

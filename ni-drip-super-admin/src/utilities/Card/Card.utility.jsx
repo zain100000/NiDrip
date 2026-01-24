@@ -1,32 +1,30 @@
 /**
- * Enhanced Card Component
+ * Dashboard Stat Card Component
  *
- * A reusable card component for displaying stats, icons, and titles.
- * Includes interactive hover effects, animations, and customizable backgrounds.
+ * A reusable card component designed to match the provided screenshot style:
+ * - Colored icon badge on the left
+ * - Small gray title/subtitle at the top
+ * - Large primary value in the center
+ * - Optional trend indicator (arrow + highlighted percentage + comparison text) at the bottom
+ * - Clean white background with subtle shadow and hover lift
+ * - Fully accessible and responsive
  *
  * @component
  * @param {Object} props - Component props.
- * @param {string} props.title - Title text displayed at the top of the card.
- * @param {Array<{ label: string, value: string|number }>} [props.stats=[]] - Array of stat objects to display inside the card.
+ * @param {string} props.title - Subtitle text (e.g., "Total Orders").
+ * @param {React.ReactNode} props.icon - Icon element (recommended: font icon or SVG, white color not needed as it's forced).
+ * @param {string|number} props.mainValue - The large primary statistic (e.g., "2,450" or 2450).
+ * @param {string} [props.accentColor="#f72585"] - Background color for the icon badge (default vibrant pink to match screenshot).
  * @param {function} [props.onClick] - Optional click handler for the entire card.
- * @param {React.ReactNode} [props.icon] - Optional icon element displayed next to the title.
- * @param {string} [props.customClassName] - Optional custom class name for styling overrides.
- * @param {string} [props.gradientType] - Optional gradient type ('ocean', 'sunset', 'forest', 'lavender', 'custom')
- * @param {string} [props.customGradient] - Custom gradient string when gradientType is 'custom'
- * @param {boolean} [props.hoverEffect=true] - Whether to enable hover effects
- * @param {string} [props.size='medium'] - Card size ('small', 'medium', 'large')
+ * @param {string} [props.customClassName] - Optional custom class name for overrides.
+ * @param {boolean} [props.hoverEffect=true] - Enable hover lift effect.
+ * @param {string} [props.size='medium'] - Card size ('small', 'medium', 'large').
  *
  * @example
- * // Simple stats card with ocean gradient
  * <Card
- *   title="Daily Sales"
- *   stats={[
- *     { label: "Orders", value: 120 },
- *     { label: "Revenue", value: "$1,250" }
- *   ]}
- *   icon={<i className="fas fa-coffee"></i>}
- *   onClick={() => console.log("Card clicked")}
- *   gradientType="ocean"
+ *   title="Total Orders"
+ *   icon={<i className="fas fa-credit-card"></i>}
+ *   accentColor="#f72585"
  * />
  */
 
@@ -36,12 +34,11 @@ import "./Card.utility.css";
 
 const Card = ({
   title,
-  stats = [],
-  onClick,
   icon,
+  mainValue = "0",
+  accentColor,
+  onClick,
   customClassName = "",
-  gradientType = "",
-  customGradient,
   hoverEffect = true,
   size = "medium",
 }) => {
@@ -59,55 +56,36 @@ const Card = ({
   };
 
   return (
-    <article
-      className={`card-container ${customClassName} ${size} ${
-        hoverEffect ? "with-hover" : ""
-      }`}
-      onClick={onClick}
-      onKeyPress={handleKeyPress}
-      tabIndex={onClick ? 0 : -1}
-      role={onClick ? "button" : "article"}
-      aria-label={onClick ? `Click to interact with ${title} card` : title}
-    >
-      <div
-        className={`card custom-card ${gradientType} ${
-          isMounted ? "mounted" : ""
+    <section id="card">
+      <article
+        className={`card-container ${customClassName} ${size} ${
+          hoverEffect ? "with-hover" : ""
         }`}
-        style={
-          gradientType === "custom" && customGradient
-            ? { background: customGradient }
-            : {}
-        }
+        onClick={onClick}
+        onKeyPress={handleKeyPress}
+        tabIndex={onClick ? 0 : -1}
+        role={onClick ? "button" : "article"}
+        aria-label={onClick ? `Click to interact with ${title} card` : title}
       >
-        <div className="card-body">
-          {/* Card header with title and optional icon */}
-          <div className="card-header">
-            <h3 className="card-title">{title}</h3>
-            {icon && <div className="card-icon">{icon}</div>}
-          </div>
-
-          {/* Card stats list */}
-          <div className="card-stats">
-            {stats.length > 0 ? (
-              stats.map((stat, index) => (
-                <div className="stat-item" key={index}>
-                  <span className="stat-label">{stat.label}:</span>
-                  <span className="stat-number">{stat.value}</span>
-                </div>
-              ))
-            ) : (
-              <span className="no-stats">No stats available</span>
+        <div className={`custom-card ${isMounted ? "mounted" : ""}`}>
+          <div className="card-inner">
+            {icon && (
+              <div
+                className="icon-wrapper"
+                style={{ backgroundColor: accentColor }}
+              >
+                <div className="card-icon">{icon}</div>
+              </div>
             )}
+
+            <div className="content-wrapper">
+              <p className="card-subtitle">{title}</p>
+              <h2 className="main-value">{mainValue}</h2>
+            </div>
           </div>
         </div>
-
-        {/* Decorative corner elements */}
-        <div className="corner top-left"></div>
-        <div className="corner top-right"></div>
-        <div className="corner bottom-left"></div>
-        <div className="corner bottom-right"></div>
-      </div>
-    </article>
+      </article>
+    </section>
   );
 };
 

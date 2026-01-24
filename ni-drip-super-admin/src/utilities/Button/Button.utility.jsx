@@ -23,7 +23,7 @@
  * <Button title="Submitting..." loading={true} disabled={true} />
  */
 
-import Loader from "../Loader/Loader.utility.jsx";
+import Loader from "../loader/Loader.utility.jsx";
 import "../../styles/global.styles.css";
 import "./Button.utility.css";
 

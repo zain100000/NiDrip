@@ -1,17 +1,6 @@
 /**
  * @file Dashboard.layout.jsx
- * @module Layouts/Dashboard
- * @description
- * The structural wrapper for the Admin application.
- * * **Core Features:**
- * - **Adaptive Navigation:** Dynamically toggles between a fixed sidebar (Desktop) and a drawer-style sidebar (Mobile).
- * - **Outlet Injection:** Serves as the parent route for all dashboard sub-pages (Reports, Users, Settings).
- * - **Resize Watcher:** Actively monitors window dimensions to prevent layout "ghosting" when transitioning between viewports.
- * * **State Management:**
- * - `sidebarOpen`: Controls the visibility of the mobile drawer.
- * - `isMobile`: Derived state based on the 1024px breakpoint.
  */
-
 import { Outlet } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./Dashboard.layout.css";
@@ -25,10 +14,7 @@ const DashboardLayout = () => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-
-      if (!mobile) {
-        setSidebarOpen(false);
-      }
+      if (!mobile) setSidebarOpen(false);
     };
 
     window.addEventListener("resize", handleResize);
@@ -37,7 +23,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar */}
+      {/* Sidebar - Controlled by sidebarOpen state */}
       <aside
         className={`sidebar-container ${
           isMobile && sidebarOpen ? "sidebar-open" : ""
@@ -46,7 +32,7 @@ const DashboardLayout = () => {
         <Sidebar />
       </aside>
 
-      {/* Overlay for mobile */}
+      {/* Overlay for mobile - Closes sidebar on click */}
       {isMobile && sidebarOpen && (
         <div
           className="sidebar-overlay"
@@ -56,6 +42,16 @@ const DashboardLayout = () => {
 
       {/* Main Content */}
       <main className="content">
+        {/* ADDED: Hamburger Menu Button (Visible only on mobile) */}
+        {isMobile && (
+          <button
+            className="menu-toggle-btn"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <i className="fas fa-bars"></i>
+          </button>
+        )}
+
         <Outlet />
       </main>
     </div>

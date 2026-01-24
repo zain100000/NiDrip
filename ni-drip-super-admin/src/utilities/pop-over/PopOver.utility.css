@@ -1,0 +1,106 @@
+/**
+ * @file PopOver.utility.jsx
+ * @module Utilities/PopOver
+ * @description 
+ * A reusable, high-order popover menu for contextual actions.
+ * * **Interactive Logic:**
+ * - **Outside-Click Detection:** Uses a `useRef` and a document-level `mousedown` event listener to auto-close the menu when the user clicks away.
+ * - **Action Orchestration:** Executes the provided `item.action()` callback and immediately closes the menu to ensure a snappy user experience.
+ * - **Conditional Rendering:** Returns `null` when `isOpen` is false to prevent unnecessary DOM nodes.
+ * * @component
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Visibility toggle state.
+ * @param {Function} props.onClose - Callback to reset the parent's visibility state.
+ * @param {Array<Object>} props.items - Navigation data: `{ label, icon, action, type }`.
+ * @param {string} [props.className] - For custom positioning (e.g., top-right, bottom-left).
+ * * @returns {React.JSX.Element|null} The floating menu or null if inactive.
+ */
+
+/**
+ * @function handleClickOutside
+ * @description 
+ * Compares the event target with the `menuRef`. If the click occurred outside the container, `onClose` is triggered.
+ * @param {MouseEvent} event - Native browser mouse event.
+ */
+
+#pop-over .action-menu-container {
+  background-color: #2b2b2b;
+  border-radius: 16px;
+  padding: 10px;
+  min-width: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+  position: absolute;
+  bottom: 70px;
+}
+
+#pop-over .action-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#pop-over .action-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+  font-family: inherit;
+}
+
+#pop-over .action-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+
+#pop-over .icon-wrapper {
+  width: 24px;
+  text-align: center;
+  margin-right: 12px;
+  font-size: 16px;
+  color: #b0b0b0;
+}
+
+#pop-over .action-menu-item:hover .icon-wrapper {
+  color: var(--white);
+}
+
+#pop-over .label-text {
+  font-size: 14px;
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+#pop-over .arrow-icon {
+  font-size: 12px;
+  opacity: 0.5;
+}
+
+#pop-over .danger-item {
+  margin-top: 8px;
+}
+
+#pop-over .danger-item:hover {
+  background-color: rgba(255, 80, 80, 0.15);
+  border-color: rgba(255, 80, 80, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

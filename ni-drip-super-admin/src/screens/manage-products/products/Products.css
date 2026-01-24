@@ -1,0 +1,141 @@
+/**
+ * @file Products.css
+ * @description 
+ * Layout definitions for the Product Grid and Data Table.
+ * * **Design Patterns:**
+ * - **Stats Grid:** A 3-column responsive layout for high-level inventory data.
+ * - **Status Badging:** Conditional CSS classes (`.active`, `.inactive`) for immediate status recognition.
+ * - **Table Scoping:** Uses `table-responsive` to ensure the management grid remains navigable on mobile devices.
+ * - **PopOver Anchoring:** Manages the relative positioning required for contextual action menus.
+ */
+
+@import url("../../../styles/global.styles.css");
+
+#products .products-container {
+  padding: 20px;
+}
+
+#products .products-breadcrumb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+#products .products-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+#products .products-subtitle {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+#products .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+#products .stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+}
+
+#products .stat-card h3 {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+#products .stat-card p {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+}
+
+#products .table-card {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+}
+
+#products .search-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+#products .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#products .custom-table th {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  font-weight: 600;
+}
+
+#products .custom-table td {
+  padding: 15px;
+  border-bottom: 1px solid #f9f9f9;
+  vertical-align: middle;
+}
+
+#products .product-name {
+  max-width: 150px;
+}
+
+#products .status-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#products .status-badge.active {
+  background-color: #dcfce7;
+  color: var(--secondary);
+}
+
+#products .action-dots {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--dark);
+}
+
+#products .loader-container {
+  display: flex;
+  justify-content: center;
+  padding: 50px;
+}
+
+@media (max-width: 768px) {
+  #products .products-breadcrumb {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #products .search-wrapper {
+    width: 100%;
+    margin-top: 15px;
+  }
+
+  #products .search-wrapper > div {
+    width: 100% !important;
+  }
+}

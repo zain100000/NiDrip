@@ -82,16 +82,16 @@ export const login = createAsyncThunk(
 
       console.log("Login response:", response.data);
 
-      const { token, superAdmin, message, success } = response.data;
+      const { token, admin, message, success } = response.data;
 
-      if (!success || !superAdmin || !token) {
+      if (!success || !admin || !token) {
         throw new Error("Invalid login response format");
       }
 
       const user = {
-        id: superAdmin.id,
-        email: superAdmin.email,
-        userName: superAdmin.userName,
+        id: admin.id,
+        email: admin.email,
+        userName: admin.userName,
       };
 
       localStorage.setItem("authToken", token);

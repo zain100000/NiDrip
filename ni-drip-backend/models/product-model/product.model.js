@@ -67,6 +67,7 @@ const reviewSchema = new mongoose.Schema(
  * @property {number}     averageReview   - (Currently unused – possibly for future text-based scoring)
  * @property {number}     totalReviews    - Total number of reviews
  * @property {ObjectId}   addedBy         - SuperAdmin who created the product
+ * @property {Array<{section: string, items: Array<{name: string, value: string}>}>} specifications - Product specifications organized into sections (e.g., "General Features", "Technical Specifications")
  * @property {Date}       createdAt
  * @property {Date}       updatedAt
  */
@@ -148,6 +149,59 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "SuperAdmin",
       required: [true, "Product must be attributed to a Super Admin"],
+    },
+
+    // New field: Specifications organized into sections for flexibility
+    // Example usage:
+    // specifications: [
+    //   {
+    //     section: "General Features",
+    //     items: [
+    //       { name: "Noise Cancellation", value: "ENC" },
+    //       { name: "Water Resistant", value: "IPX4" },
+    //       { name: "Charging Interface", value: "Type-C" },
+    //       ...
+    //     ]
+    //   },
+    //   {
+    //     section: "Technical Specifications",
+    //     items: [ ... ]
+    //   }
+    // ]
+    specifications: {
+      type: [
+        {
+          section: {
+            type: String,
+            required: true,
+            trim: true,
+          },
+          items: {
+            type: [
+              {
+                name: {
+                  type: String,
+                  required: true,
+                  trim: true,
+                },
+                value: {
+                  type: String,
+                  required: true,
+                  trim: true,
+                },
+              },
+            ],
+            default: [],
+          },
+        },
+      ],
+      default: [],
+      validate: {
+        validator: function (sections) {
+          return sections.every((sec) => sec.items && sec.items.length > 0);
+        },
+        message: "Each specification section must have at least one item.",
+      },
     },
   },
   {

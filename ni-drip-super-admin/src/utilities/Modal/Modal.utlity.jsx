@@ -16,25 +16,11 @@
  * @param {() => void} [props.buttons[].onClick] - Click handler for the button.
  * @param {boolean} [props.buttons[].loading=false] - If true, shows a loader instead of label.
  * @param {React.ReactNode} [props.icon] - Optional icon to render alongside modal title.
- *
- * @example
- * <Modal
- *   isOpen={true}
- *   onClose={() => setModalOpen(false)}
- *   title="Confirm Delete"
- *   buttons={[
- *     { label: "Cancel", onClick: handleCancel },
- *     { label: "Delete", onClick: handleDelete, className: "danger", loading: isDeleting }
- *   ]}
- * >
- *   <p>Are you sure you want to delete this item?</p>
- * </Modal>
  */
-
 import ReactDOM from "react-dom";
 import "../../styles/global.styles.css";
 import "./Modal.utility.css";
-import Loader from "../Loader/Loader.utility";
+import Loader from "../loader/Loader.utility";
 
 const Modal = ({ isOpen, onClose, title, children, buttons = [], icon }) => {
   return ReactDOM.createPortal(
@@ -45,17 +31,21 @@ const Modal = ({ isOpen, onClose, title, children, buttons = [], icon }) => {
       >
         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
-            {icon && <span className="modal-icon">{icon}</span>}
             <h3 className="modal-title">{title}</h3>
-            <button
-              className="modal-close-btn"
-              onClick={onClose}
-              aria-label="Close"
-            >
-              &times;
-            </button>
+            {!buttons.some((b) => b.loading) && (
+              <button
+                className="modal-close-btn"
+                onClick={onClose}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            )}
           </div>
-          <div className="modal-body">{children}</div>
+          <div className="modal-body">
+            {icon && <div className="modal-body-icon">{icon}</div>}
+            {children}
+          </div>
           <div className="modal-footer">
             {buttons.map((btn, index) => (
               <button
@@ -65,7 +55,7 @@ const Modal = ({ isOpen, onClose, title, children, buttons = [], icon }) => {
                 disabled={btn.loading}
               >
                 {btn.loading ? (
-                  <Loader loading={btn.loading} size={20} color="#fff" />
+                  <Loader loading={btn.loading} size={18} color="#fff" />
                 ) : (
                   btn.label
                 )}
@@ -75,7 +65,7 @@ const Modal = ({ isOpen, onClose, title, children, buttons = [], icon }) => {
         </div>
       </div>
     </section>,
-    document.body
+    document.body,
   );
 };
 

@@ -37,14 +37,14 @@ import { NavLink, useNavigate } from "react-router-dom";
 import "../../../styles/global.styles.css";
 import "./Signup.auth.css";
 import Logo from "../../../assets/logo/logo.png";
-import InputField from "../../../utilities/InputField/InputField.utility";
-import Button from "../../../utilities/Button/Button.utility";
+import InputField from "../../../utilities/input-field/InputField.utility";
+import Button from "../../../utilities/button/Button.utility";
 import {
   validateEmail,
   validatePassword,
   validateFields,
   validateFullName,
-} from "../../../utilities/Validations/Validation.utility";
+} from "../../../utilities/validations/Validation.utility";
 import imgPlaceholder from "../../../assets/placeHolder/placeholder.png";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
