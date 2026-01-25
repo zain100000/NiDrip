@@ -195,13 +195,7 @@ const productSchema = new mongoose.Schema(
           },
         },
       ],
-      default: [],
-      validate: {
-        validator: function (sections) {
-          return sections.every((sec) => sec.items && sec.items.length > 0);
-        },
-        message: "Each specification section must have at least one item.",
-      },
+      default: [],      
     },
   },
   {

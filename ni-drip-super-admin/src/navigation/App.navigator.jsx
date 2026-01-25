@@ -26,11 +26,20 @@ import ResetPassword from "../screens/auth/reset-password/ResetPassword.auth";
 import Dashboard from "../screens/dashboard/Main.dashboard";
 
 // Products Management
+import AddProduct from "../screens/manage-products/add-product/AddProduct";
 import Products from "../screens/manage-products/products/Products";
 import ProductDetails from "../screens/manage-products/product-details/ProductDetails";
+import UpdateProduct from "../screens/manage-products/update-product/UpdateProduct";
+
+// Inventory Management
+import Inventory from "../screens/manage-inventory/Inventory";
+
+// Reviews Management
+import Reviews from "../screens/manage-reviews/Reviews";
 
 // Not Found
 import NotFound from "../screens/not-found/Not-Found";
+import SupportTickets from "../screens/manage-support-tickets/SupportTickets";
 
 /**
  * Application routing configuration.
@@ -62,10 +71,30 @@ const AppNavigator = () => {
         <Route path="dashboard" element={<Dashboard />} />
 
         {/* Products Management */}
+        <Route
+          path="products/manage-products/add-product"
+          element={<AddProduct />}
+        />
         <Route path="products/manage-products" element={<Products />} />
         <Route
           path="products/manage-products/product-details/:productId"
           element={<ProductDetails />}
+        />
+        <Route
+          path="products/manage-products/update-product/:productId"
+          element={<UpdateProduct />}
+        />
+
+        {/* Inventory Management */}
+        <Route path="inventory/manage-inventory" element={<Inventory />} />
+
+        {/* Reviews Management */}
+        <Route path="reviews/manage-reviews" element={<Reviews />} />
+
+        {/* Support Tickets Management */}
+        <Route
+          path="support/manage-support-tickets"
+          element={<SupportTickets />}
         />
       </Route>
 

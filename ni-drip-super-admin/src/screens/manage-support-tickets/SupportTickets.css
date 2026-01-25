@@ -1,0 +1,205 @@
+/**
+ * @file SupportTicket.css
+ * @module Styles/SupportTicket
+ * @description 
+ * Styling definitions for the Support Ticket Moderation dashboard.
+ * * **Design Logic:**
+ * - **Dynamic Grid:** The `.stats-grid` adapts to a 5-column layout on desktop to accommodate all ticket lifecycle stages (Total, Open, In-Progress, Resolved, Closed).
+ * - **Status Badging:** Implements a semantic color system for ticket states (`.open`, `.in-progress`, `.resolved`, `.closed`).
+ * - **Priority Indicators:** High-contrast badges for Priority levels to ensure urgent issues are visually prioritized.
+ * - **Cell Constraints:** Limits the width of ID and Subject cells to prevent layout breaking on long text strings.
+ */
+
+@import url("../../styles/global.styles.css");
+
+#support-ticket .support-ticket-container {
+  padding: 20px;
+}
+
+#support-ticket .support-ticket-breadcrumb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+#support-ticket .support-ticket-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+#support-ticket .support-subtitle {
+  color: var(--dark);
+}
+
+/* 5-Column Grid for Ticket Stats */
+#support-ticket .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+#support-ticket .stat-card {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--gray);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  text-align: center;
+}
+
+#support-ticket .stat-card h3 {
+  font-size: 0.8rem;
+  color: var(--dark);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#support-ticket .stat-card p {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+#support-ticket .table-card {
+  background: var(--white);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--gray);
+}
+
+#support-ticket .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#support-ticket .custom-table th {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 2px solid #f3f4f6;
+  font-weight: 600;
+}
+
+#support-ticket .custom-table td {
+  padding: 15px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+/* Ticket Info & ID */
+#support-ticket .sku {
+  font-weight: 700;
+  color: var(--dark);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Status Badges */
+#support-ticket .status-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+#support-ticket .status-badge.open {
+  background: #2563eb;
+  color: var(--white);
+}
+#support-ticket .status-badge.in-progress {
+  background: #d97706;
+  color: var(--white);
+}
+#support-ticket .status-badge.resolved {
+  background: #d1fae5;
+  color: var(--white);
+}
+#support-ticket .status-badge.closed {
+  background: #f3f4f6;
+  color: var(--white);
+}
+
+/* Priority Badges */
+#support-ticket .priority-badge {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+#support-ticket .priority-badge.high {
+  color: #dc2626;
+}
+#support-ticket .priority-badge.medium {
+  color: #d97706;
+}
+#support-ticket .priority-badge.low {
+  color: #2563eb;
+}
+
+/* Action Dots */
+#support-ticket .action-dots {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  transition: transform 0.2s;
+}
+
+#support-ticket .no-ticket-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+#support-ticket .no-ticket-icon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+#support-ticket .no-ticket-state h3 {
+  margin: 0;
+  font-weight: 600;
+}
+
+#support-ticket .no-ticket-state p {
+  margin: 0;
+  opacity: 0.6;
+  max-width: 320px;
+}
+
+#support-ticket .ticket-loader {
+  padding: 4rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+  #support-ticket .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  #support-ticket .support-ticket-breadcrumb {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  #support-ticket .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #support-ticket .search-wrapper {
+    width: 100%;
+  }
+}

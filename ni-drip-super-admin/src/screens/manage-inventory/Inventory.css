@@ -1,0 +1,239 @@
+/**
+ * @file Inventory.css
+ * @module Styles/Inventory
+ * @description 
+ * Styling for the Inventory Management module. Optimized for rapid stock auditing and adjustment.
+ * * **Core Layout Principles:**
+ * - **Visual Hierarchy:** Combines product imagery, titles, and SKU identifiers within a single `.product-cell` for efficient identification.
+ * - **Stock Status Indicators:** Implements a multi-stage badge system (`.badge-success`, `.badge-warning`, `.badge-error`) to signal stock health at a glance.
+ * - **Interactive Micro-controls:** The `.btn-stock` group provides immediate inline quantity adjustments using distinct hover states (green for plus, red for minus).
+ * - **Bento Card Pattern:** Uses `.table-card` with an elevated shadow to separate the management grid from the application background.
+ * * **Technical Highlights:**
+ * - Employs `vertical-align: middle` on table cells to maintain consistent baseline alignment across varying content heights.
+ * - Features an `.empty-state` layout with large iconography for a polished user experience when search results are null.
+ */
+
+@import url("../../styles/global.styles.css");
+
+#inventory .inventory-container {
+  padding: 20px;
+}
+
+#inventory .inventory-breadcrumb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+#inventory .inventory-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+#inventory .inventory-subtitle {
+  color: var(--dark);
+  margin-bottom: 25px;
+}
+
+#inventory .table-card {
+  background: var(--white);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--gray);
+}
+
+#inventory .search-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+#inventory .inventory-actions {
+  display: flex;
+  align-items: center;
+}
+
+#inventory .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#inventory .custom-table th {
+  padding: 15px;
+  border-bottom: 1px solid var(--gray);
+  color: var(--dark);
+  font-weight: 600;
+}
+
+#inventory .custom-table td {
+  padding: 15px;
+  border-bottom: 1px solid var(--gray);
+  vertical-align: middle;
+}
+
+#inventory .product-title {
+  max-width: 150px;
+}
+
+#inventory .product-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+#inventory .img-container img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+#inventory .info {
+  display: flex;
+  flex-direction: column;
+}
+
+#inventory .info .title {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+#inventory .info .sku {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+#inventory .badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+#inventory .badge-success {
+  background: var(--success);
+  color: var(--white);
+}
+
+#inventory .badge-warning {
+  background: #f0dd7d;
+  color: var(--white);
+}
+
+#inventory .badge-error {
+  background: var(--error);
+  color: var(--white);
+}
+
+#inventory .stock-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+#inventory .stock-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+#inventory .stock-label {
+  font-size: 0.8rem;
+  color: var(--border-color);
+}
+
+#inventory .action-group {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+#inventory .btn-stock {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 2px solid var(--dark);
+  background: var(--white);
+  color: var(--dark);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#inventory .btn-stock:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+#inventory .btn-plus:hover:not(:disabled) {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+#inventory .btn-minus:hover:not(:disabled) {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+#inventory .btn-stock:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#inventory .no-products-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+#inventory .no-products-icon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+#inventory .no-products-state h3 {
+  margin: 0;
+  font-weight: 600;
+}
+
+#inventory .no-products-state p {
+  margin: 0;
+  opacity: 0.6;
+  max-width: 320px;
+}
+
+#inventory .inventory-loader {
+  padding: 4rem;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  #inventory .inventory-breadcrumb {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #inventory .search-wrapper {
+    width: 100%;
+    margin-top: 15px;
+  }
+
+  #inventory .search-wrapper > div {
+    width: 100% !important;
+  }
+
+  #inventory .inventory-actions {
+    width: 100%;
+  }
+}

@@ -1,0 +1,181 @@
+/**
+ * @file Reviews.css
+ * @module Styles/Reviews
+ * @description 
+ * Stylesheet for the Review Moderation dashboard. 
+ * * **Core Layout Architecture:**
+ * - **Auto-Adaptive Grid:** The `.stats-grid` utilizes `repeat(auto-fit, minmax(200px, 1fr))` to automatically adjust the number of metric cards per row based on viewport width.
+ * - **Data Integrity:** Employs `text-overflow: ellipsis` on both product titles and review comments to prevent long strings from breaking the table's horizontal alignment.
+ * - **Flexbox Alignment:** The `.reviewer-cell` uses `display: flex` with a fixed-size circular avatar to create a professional user identity block.
+ * * **Design System Integration:**
+ * - Relies on `var(--primary)` for branding and `var(--gray)` for secondary meta-data.
+ * - Uses a subtle `0.05` opacity shadow on `.table-card` to provide depth without visual clutter.
+ */
+
+@import url("../../styles/global.styles.css");
+
+#reviews .reviews-container {
+  padding: 20px;
+}
+
+#reviews .reviews-breadcrumb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+#reviews .reviews-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+#reviews .reviews-subtitle {
+  color: var(--dark);
+}
+
+#reviews .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+#reviews .stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--gray);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+#reviews .stat-card h3 {
+  font-size: 0.9rem;
+  color: var(--dark);
+  margin-bottom: 10px;
+}
+
+#reviews .stat-card p {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+#reviews .table-card {
+  background: var(--white);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--gray);
+}
+
+#reviews .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#reviews .custom-table th {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+#reviews .custom-table td {
+  padding: 15px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+#reviews .reviewer-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#reviews .reviewer-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+#reviews .user-name {
+  font-weight: 600;
+}
+
+#reviews .product-title {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#reviews .comment-cell {
+  max-width: 300px;
+}
+
+#reviews .comment-text {
+  font-size: 0.9rem;
+  color: #4b5563;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#reviews .action-dots {
+  background: transparent !important;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--dark);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: opacity 0.2s;
+}
+
+#reviews .no-review-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+#reviews .no-review-icon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+#reviews .no-review-state h3 {
+  margin: 0;
+  font-weight: 600;
+}
+
+#reviews .no-review-state p {
+  margin: 0;
+  opacity: 0.6;
+  max-width: 320px;
+}
+
+#reviews .review-loader {
+  padding: 4rem;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  #reviews .reviews-breadcrumb {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  #reviews .search-wrapper {
+    width: 100%;
+  }
+}

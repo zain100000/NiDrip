@@ -19,11 +19,11 @@ const {
 router.post("/add-review", encryptedAuthMiddleware, reviewController.addReview);
 
 /**
- * @description Get all reviews for a specific product
- * @route   GET /api/review/get-all-reviews/:productId
+ * @description Get all reviews 
+ * @route   GET /api/review/get-all-reviews
  * @access  Public
  */
-router.get("/get-all-reviews/:productId", reviewController.getAllReviews);
+router.get("/get-all-reviews", reviewController.getAllReviews);
 
 /**
  * @description Update an existing review

@@ -3,13 +3,7 @@
  * @module Styles/Signup
  * @description 
  * Stylesheet for the Admin Registration interface.
- * * **Visual Pillars:**
- * - **Consistent Grid:** Inherits the 30/70 split-panel layout for module continuity.
- * - **Avatar UI:** Introduces a circular profile-picture wrapper with hover-scaling and border transitions.
- * - **Interactive Orbits:** Replicates the 5-ball orbital system using CSS keyframe animations to maintain brand identity across the auth flow.
- * * **Key Selectors:**
- * - `.profile-pic-wrapper`: Handles the circular mask and interactive state for the file picker.
- * - `.orbit-system`: The absolute-positioned container for the background animation.
+ * Refactored to utilize global design system tokens.
  * * @requires ../../../styles/global.styles.css
  */
 
@@ -19,7 +13,7 @@
 #signup-screen {
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #f0f4ff 0%, #d0e0ff 100%);
+  background: linear-gradient(135deg, var(--white) 0%, var(--gray) 100%);
 }
 
 /* Grid */
@@ -36,7 +30,7 @@
   justify-content: flex-start;
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   backdrop-filter: blur(20px);
-  padding: 25px 50px;
+  padding: var(--spacing-lg) var(--spacing-xl);
 }
 
 /* Form content container */
@@ -47,7 +41,7 @@
 
 /* Logo */
 #signup-screen .logo-container {
-  margin-bottom: 40px;
+  margin-bottom: var(--spacing-xl);
   text-align: center;
 }
 
@@ -56,21 +50,22 @@
   height: 80px;
 }
 
-/* Profile picture upload (centered, fits narrow layout) */
+/* Profile picture upload */
 #signup-screen .profile-upload-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 40px;
+  margin-bottom: var(--spacing-xl);
 }
 
 #signup-screen .profile-pic-wrapper {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
+  border-radius: 50%; /* Using 50% for perfect circle */
   overflow: hidden;
   border: 3px solid rgba(255, 255, 255, 0.3);
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
 }
 
 #signup-screen .profile-pic-wrapper:hover {
@@ -86,33 +81,28 @@
 
 /* Input groups */
 #signup-screen .input-group {
-  margin-bottom: 10px;
+  margin-bottom: var(--spacing-sm);
   width: 100%;
 }
 
 /* Button */
 #signup-screen .btn-container {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-xl);
 }
 
-/* Signin link container (matches signin's signup-container style) */
+/* Signin link container */
 #signup-screen .signin-container {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   font-size: var(--font-size-sm);
   color: var(--gray);
 }
 
 #signup-screen .signin-link {
   color: var(--dark);
-  text-decoration: none;
   font-weight: 500;
-}
-
-#signup-screen .signin-link:hover {
-  text-decoration: none;
 }
 
 /* Right side - Decorative orbiting balls */
@@ -133,18 +123,17 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  border: 1px solid rgba(150, 180, 255, 0.18);
+  border: 2px solid rgba(219, 211, 211, 0.15);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: rotate linear infinite;
 }
 
-/* Individual orbits (exactly matching provided signin) */
+/* Individual orbits */
 #signup-screen .orbit-1 {
   width: 340px;
   height: 340px;
   animation-duration: 24s;
-  animation-delay: 0s;
 }
 #signup-screen .orbit-2 {
   width: 520px;
@@ -173,7 +162,7 @@
   animation-delay: -15s;
 }
 
-/* Balls (exactly matching provided signin) */
+/* Balls */
 #signup-screen .ball {
   position: absolute;
   top: 0;
@@ -185,14 +174,14 @@
 #signup-screen .ball-1 {
   width: 40px;
   height: 40px;
-  background: radial-gradient(circle at 30% 30%, #ff6b9d, #c44c7f);
-  box-shadow: 0 0 50px #ff6b9d;
+  background: radial-gradient(circle at 30% 30%, var(--primary), #c44c7f);
+  box-shadow: 0 0 50px var(--primary);
 }
 #signup-screen .ball-2 {
   width: 55px;
   height: 55px;
-  background: radial-gradient(circle at 30% 30%, #5ce1e6, #00bcd4);
-  box-shadow: 0 0 60px #5ce1e6;
+  background: radial-gradient(circle at 30% 30%, var(--secondary), #00bcd4);
+  box-shadow: 0 0 60px var(--secondary);
 }
 #signup-screen .ball-3 {
   width: 35px;
@@ -203,14 +192,14 @@
 #signup-screen .ball-4 {
   width: 65px;
   height: 65px;
-  background: radial-gradient(circle at 30% 30%, #ff8b94, #ff5c8a);
-  box-shadow: 0 0 70px #ff8b94;
+  background: radial-gradient(circle at 30% 30%, var(--error), #ff5c8a);
+  box-shadow: 0 0 70px var(--error);
 }
 #signup-screen .ball-5 {
   width: 45px;
   height: 45px;
-  background: radial-gradient(circle at 30% 30%, #72d6c9, #34d1bf);
-  box-shadow: 0 0 50px #72d6c9;
+  background: radial-gradient(circle at 30% 30%, var(--success), #34d1bf);
+  box-shadow: 0 0 50px var(--success);
 }
 
 @keyframes rotate {
@@ -222,7 +211,7 @@
   }
 }
 
-/* Responsive - exactly matching signin behavior */
+/* Responsive */
 @media (max-width: 992px) {
   #signup-screen .signup-grid {
     flex-direction: column;
@@ -230,8 +219,8 @@
 
   #signup-screen .left-side {
     flex: 1;
-    padding: 60px 40px 40px 40px;
-    justify-content: flex-start;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    justify-content: center;
   }
 
   #signup-screen .form-content {
@@ -246,18 +235,14 @@
 
 @media (max-width: 576px) {
   #signup-screen .left-side {
-    padding: 40px 20px;
+    padding: var(--spacing-lg) var(--spacing-md);
   }
 
   #signup-screen .logo-container {
-    margin-bottom: 40px;
+    margin-bottom: var(--spacing-lg);
   }
 
   #signup-screen .profile-upload-container {
-    margin-bottom: 30px;
-  }
-
-  #signup-screen .right-side {
-    display: none;
+    margin-bottom: var(--spacing-lg);
   }
 }

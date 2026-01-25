@@ -1,0 +1,208 @@
+/**
+ * @file AddProduct.css
+ * @description 
+ * Layout definitions for the Add Product form.
+ * * **Design Patterns:**
+ * - **Form Grid:** A responsive grid layout for organizing form fields.
+ * - **Input Styling:** Consistent styling for all input elements.
+ * - **Image Preview:** Responsive image preview container with placeholder support.
+ * - **Button Alignment:** Right-aligned action buttons for a clean interface.
+ * - **Table Scoping:** Uses `table-responsive` to ensure the management grid remains navigable on mobile devices.
+ * - **PopOver Anchoring:** Manages the relative positioning required for contextual action menus.
+ */
+
+@import url("../../../styles/global.styles.css");
+
+#upload-product .upload-product-container {
+  padding: 20px;
+}
+
+#upload-product .upload-product-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+#upload-product .upload-product-subtitle {
+  color: var(--dark);
+  margin-bottom: 25px;
+}
+
+#upload-product .upload-product-form-section {
+  background: var(--white);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--gray);
+}
+
+#upload-product .images-upload-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: flex-start;
+}
+
+#upload-product .img-preview-wrapper {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--gray);
+}
+
+#upload-product .product-img-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#upload-product .remove-img-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+#upload-product .remove-img-btn:hover {
+  transform: scale(1.2);
+}
+
+#upload-product .upload-placeholder-card {
+  width: 150px;
+  height: 150px;
+  border: 2px dashed var(--gray);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#upload-product .upload-placeholder-card:hover {
+  background: var(--white);
+}
+
+#upload-product .upload-placeholder-card img {
+  width: 40px;
+  opacity: 0.5;
+  margin-bottom: 8px;
+}
+
+#upload-product .upload-placeholder-card span {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+
+#upload-product .specifications-builder {
+  border-top: 2px solid #f0f0f0;
+  padding-top: 20px;
+}
+
+#upload-product .add-section-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#upload-product .spec-section-card {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+#upload-product .spec-section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+#upload-product .section-title-input {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-weight: 600;
+  outline: none;
+}
+
+#upload-product .section-title-input:focus {
+  border-color: var(--primary);
+}
+
+#upload-product .remove-section-btn {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#upload-product .spec-item-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#upload-product .spec-item-row input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 14px;
+}
+
+#upload-product .remove-item-btn {
+  background: none;
+  border: none;
+  color: #ff4d4f;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#upload-product .add-item-btn {
+  background: none;
+  border: 1px dashed var(--primary);
+  color: var(--primary);
+  padding: 5px 15px;
+  border-radius: 5px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+#upload-product .add-item-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+  #upload-product .images-upload-grid {
+    justify-content: center;
+  }
+}

@@ -10,9 +10,10 @@
  * * **Technical Logic:**
  * - **Dynamic Mapping:** Consumes an array of `navItems` to generate scalable navigation.
  * - **Active State Detection:** Leverages `react-router-dom`'s `NavLink` to automatically style the current route.
+ * - **Profile Menu:** Uses PopOver component for profile actions with proper positioning.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo/logo.png";
 import imgPlaceholder from "../../assets/placeHolder/placeholder.png";
@@ -28,6 +29,7 @@ const Sidebar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileButtonRef = useRef(null);
 
   const user = useSelector((state) => state.auth.user);
   const superAdmin = useSelector((state) => state.superAdmin.superAdmin);
@@ -40,11 +42,26 @@ const Sidebar = () => {
   }, [dispatch, user?.id]);
 
   const navItems = [
-    { name: "Dashboard", path: "/super-admin/dashboard", icon: "fas fa-home" },
+    { name: "Dashboard", path: "/super-admin", icon: "fas fa-home" },
     {
       name: "Manage Products",
       path: "/super-admin/products/manage-products",
       icon: "fas fa-box-open",
+    },
+    {
+      name: "Manage Stock",
+      path: "/super-admin/inventory/manage-inventory",
+      icon: "fas fa-warehouse",
+    },
+    {
+      name: "Manage Reviews",
+      path: "/super-admin/reviews/manage-reviews",
+      icon: "fas fa-star",
+    },
+    {
+      name: "Manage Tickets",
+      path: "/super-admin/support/manage-support-tickets",
+      icon: "fas fa-ticket-alt",
     },
   ];
 
@@ -79,10 +96,33 @@ const Sidebar = () => {
           }
         } catch (error) {
           console.error("Logout error:", error);
+        } finally {
+          setIsProfileMenuOpen(false);
         }
       },
     },
   ];
+
+  // Handle click outside profile menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        profileButtonRef.current &&
+        !profileButtonRef.current.contains(event.target) &&
+        !event.target.closest(".action-menu-container")
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    if (isProfileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isProfileMenuOpen]);
 
   return (
     <section id="sidebar">
@@ -95,6 +135,7 @@ const Sidebar = () => {
           <NavLink
             key={item.name}
             to={item.path}
+            end={item.path === "/super-admin"}
             className={({ isActive }) =>
               `sidebar-link ${isActive ? "active" : ""}`
             }
@@ -108,23 +149,27 @@ const Sidebar = () => {
       </nav>
 
       <div className="side-bar-footer">
-        {/* Render the Reusable Menu */}
-        <div className="profile-menu-wrapper">
-          <PopOver
-            isOpen={isProfileMenuOpen}
-            onClose={() => setIsProfileMenuOpen(false)}
-            items={profileMenuItems}
-            className="sidebar-profile-popup"
-          />
-        </div>
-
         {/* Profile Image Trigger */}
         <div
           className="profile-container"
+          ref={profileButtonRef}
           onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
         >
-          <img src={profilePicture} alt="Profile" className="profile-img" />
+          <div className="profile-img-wrapper">
+            <img src={profilePicture} alt="Profile" className="profile-img" />
+            <div className="profile-status-indicator"></div>
+          </div>
         </div>
+
+        {/* PopOver Menu */}
+        <PopOver
+          isOpen={isProfileMenuOpen}
+          onClose={() => setIsProfileMenuOpen(false)}
+          items={profileMenuItems}
+          className="sidebar-profile-popover"
+          anchorRef={profileButtonRef}
+          position="bottom"
+        />
       </div>
     </section>
   );

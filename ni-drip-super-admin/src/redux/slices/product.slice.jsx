@@ -45,14 +45,14 @@ export const addProduct = createAsyncThunk(
         },
       );
 
-      const { product, message, success } = response.data;
+      const { newProduct, message, success } = response.data;
 
       if (!success) {
         throw new Error(message);
       }
 
       return {
-        product: product || response.data,
+        product: newProduct || response.data,
         message: message,
         success: true,
       };

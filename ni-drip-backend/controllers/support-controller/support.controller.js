@@ -101,6 +101,7 @@ exports.getAllTickets = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Tickets fetched successfully",
+      count: tickets.length,
       allTickets: tickets,
     });
   } catch (error) {

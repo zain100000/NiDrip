@@ -29,7 +29,7 @@
 }
 
 #products .products-subtitle {
-  color: #666;
+  color: var(--dark);
   margin-bottom: 25px;
 }
 
@@ -41,17 +41,17 @@
 }
 
 #products .stat-card {
-  background: white;
+  background: var(--white);
   padding: 20px;
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid #eee;
+  border: 1px solid var(--gray);
 }
 
 #products .stat-card h3 {
   font-size: 14px;
-  color: #888;
+  color: var(--dark);
   margin-bottom: 8px;
   text-transform: uppercase;
 }
@@ -62,12 +62,18 @@
   margin: 0;
 }
 
+#products .btn-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
 #products .table-card {
-  background: white;
+  background: var(--white);
   border-radius: 15px;
   padding: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--gray);
 }
 
 #products .search-wrapper {
@@ -83,14 +89,14 @@
 
 #products .custom-table th {
   padding: 15px;
-  border-bottom: 1px solid #eee;
-  color: #333;
+  border-bottom: 1px solid var(--gray);
+  color: var(--dark);
   font-weight: 600;
 }
 
 #products .custom-table td {
   padding: 15px;
-  border-bottom: 1px solid #f9f9f9;
+  border-bottom: 1px solid var(--gray);
   vertical-align: middle;
 }
 
@@ -106,8 +112,8 @@
 }
 
 #products .status-badge.active {
-  background-color: #dcfce7;
-  color: var(--secondary);
+  background-color: var(--success);
+  color: var(--dark);
 }
 
 #products .action-dots {
@@ -124,6 +130,32 @@
   padding: 50px;
 }
 
+#products .no-products-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+#products .no-products-icon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+#products .no-products-state h3 {
+  margin: 0;
+  font-weight: 600;
+}
+
+#products .no-products-state p {
+  margin: 0;
+  opacity: 0.6;
+  max-width: 320px;
+}
+
 @media (max-width: 768px) {
   #products .products-breadcrumb {
     flex-direction: column;
@@ -137,5 +169,13 @@
 
   #products .search-wrapper > div {
     width: 100% !important;
+  }
+
+  #products .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #products .btn-container {
+    width: 100%;
   }
 }

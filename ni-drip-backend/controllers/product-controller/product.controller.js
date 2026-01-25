@@ -86,6 +86,7 @@ exports.getAllProducts = async (req, res) => {
   try {
     const products = await Product.find()
       .populate("addedBy", "userName email")
+      .populate("reviews.user", "profilePicture userName email") // Deep populate user in reviews
       .sort({ createdAt: -1 });
 
     if (!products.length) {
@@ -117,10 +118,9 @@ exports.getAllProducts = async (req, res) => {
  */
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.productId).populate(
-      "addedBy",
-      "userName",
-    );
+    const product = await Product.findById(req.params.productId)
+      .populate("addedBy", "userName email")
+      .populate("reviews.user", "profilePicture userName email"); // Deep populate user in reviews
 
     if (!product) {
       return res.status(404).json({
@@ -172,12 +172,76 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    const updates = { ...req.body };
+    // Prepare update object with only provided fields
+    const updates = {};
+    const updateableFields = [
+      "title",
+      "description",
+      "price",
+      "category",
+      "stock",
+      "specifications",
+    ];
 
-    if (updates.category && !Array.isArray(updates.category)) {
-      updates.category = [updates.category];
-    }
+    // Add only the fields that are provided in the request body AND have a valid value
+    updateableFields.forEach((field) => {
+      if (req.body[field] !== undefined && req.body[field] !== "") {
+        // Handle category field - convert to array if it's not already
+        if (field === "category") {
+          if (Array.isArray(req.body[field]) && req.body[field].length > 0) {
+            updates.category = req.body[field];
+          } else if (
+            typeof req.body[field] === "string" &&
+            req.body[field].trim() !== ""
+          ) {
+            updates.category = [req.body[field]];
+          }
+        }
+        // Handle specifications field
+        else if (field === "specifications") {
+          if (Array.isArray(req.body[field]) && req.body[field].length > 0) {
+            updates.specifications = req.body[field];
+          } else if (
+            typeof req.body[field] === "string" &&
+            req.body[field].trim() !== ""
+          ) {
+            // Try to parse if it's a JSON string
+            try {
+              const parsed = JSON.parse(req.body[field]);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                updates.specifications = parsed;
+              }
+            } catch (e) {
+              // If not valid JSON, check if it's a non-empty string
+              if (req.body[field].trim() !== "") {
+                updates.specifications = req.body[field];
+              }
+            }
+          }
+        }
+        // Handle other fields with validation
+        else if (field === "price" || field === "stock") {
+          // For numeric fields, only update if it's a valid number
+          const value = parseFloat(req.body[field]);
+          if (!isNaN(value) && value >= 0) {
+            updates[field] = value;
+          }
+        }
+        // Handle string fields (title, description)
+        else if (
+          typeof req.body[field] === "string" &&
+          req.body[field].trim() !== ""
+        ) {
+          updates[field] = req.body[field];
+        }
+        // For other types, just update as-is
+        else if (req.body[field] !== null) {
+          updates[field] = req.body[field];
+        }
+      }
+    });
 
+    // Handle product images separately
     if (req.files?.productImage?.length) {
       // Delete old images
       if (product.productImages?.length) {
@@ -186,6 +250,7 @@ exports.updateProduct = async (req, res) => {
         );
       }
 
+      // Upload new images
       const uploaded = await Promise.all(
         req.files.productImage.map((file) =>
           uploadToCloudinary(file, "productImage"),
@@ -195,7 +260,16 @@ exports.updateProduct = async (req, res) => {
       updates.productImages = uploaded.map((img) => img.url);
     }
 
-    const updated = await Product.findByIdAndUpdate(
+    // If no updates are provided, return error
+    if (Object.keys(updates).length === 0 && !req.files?.productImage?.length) {
+      return res.status(400).json({
+        success: false,
+        message: "No updates provided",
+      });
+    }
+
+    // Update only the provided fields
+    const updatedProduct = await Product.findByIdAndUpdate(
       req.params.productId,
       updates,
       { new: true, runValidators: true },
@@ -204,7 +278,7 @@ exports.updateProduct = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Product updated successfully",
-      updatedProduct: updated,
+      updatedProduct: updatedProduct,
     });
   } catch (error) {
     console.error("Update product error:", error);

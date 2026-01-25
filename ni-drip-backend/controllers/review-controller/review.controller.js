@@ -151,17 +151,22 @@ exports.deleteReview = async (req, res) => {
 };
 
 /**
- * Get all reviews for a product
- * @param {string} productId
+ * Get all reviews
  * @access Public
  */
 exports.getAllReviews = async (req, res) => {
   try {
-    const { productId } = req.params;
-
-    const reviews = await Review.find({ product: productId })
-      .populate("user", "userName profilePicture")
+    const reviews = await Review.find()
+      .populate("user", "profilePicture userName email") 
+      .populate("product", "productImage title description") 
       .sort({ createdAt: -1 });
+
+    if (!reviews.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No review found",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -170,7 +175,7 @@ exports.getAllReviews = async (req, res) => {
       allReviews: reviews,
     });
   } catch (error) {
-    console.error("Get reviews error:", error);
+    console.error("Get all reviews error:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",

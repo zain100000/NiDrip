@@ -26,10 +26,13 @@ import InputField from "../../../utilities/input-field/InputField.utility";
 import PopOver from "../../../utilities/pop-over/PopOver.utility";
 import Modal from "../../../utilities/modal/Modal.utlity";
 import { toast } from "react-hot-toast";
+import Button from "../../../utilities/button/Button.utility";
+import { useRef } from "react";
 
 const Products = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const actionButtonRefs = useRef({});
   const user = useSelector((state) => state.auth.user);
   const products = useSelector((state) => state.products.products || []);
   const loading = useSelector((state) => state.products.loading);
@@ -70,9 +73,12 @@ const Products = () => {
       label: "Edit Product",
       icon: "fas fa-pencil-alt",
       action: () =>
-        navigate(`/super-admin/products/edit-product/${product._id}`, {
-          state: { product },
-        }),
+        navigate(
+          `/super-admin/products/manage-products/update-product/${product._id}`,
+          {
+            state: { product },
+          },
+        ),
     },
     {
       label: "Delete",
@@ -137,9 +143,21 @@ const Products = () => {
             <h3>Total Products</h3>
             <p>{stats.total}</p>
           </div>
+
           <div className="stat-card">
             <h3>Active</h3>
             <p>{stats.active}</p>
+          </div>
+
+          <div className="btn-container">
+            <Button
+              title="Add Product"
+              width={150}
+              icon={<i className="fas fa-plus-circle"></i>}
+              onPress={() =>
+                navigate("/super-admin/products/manage-products/add-product")
+              }
+            />
           </div>
         </div>
 
@@ -178,6 +196,9 @@ const Products = () => {
                       <td className="action-dots">
                         <div className="popover-anchor">
                           <button
+                            ref={(el) =>
+                              (actionButtonRefs.current[product._id] = el)
+                            }
                             className="action-dots"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -190,14 +211,19 @@ const Products = () => {
                           >
                             <i
                               className="fas fa-ellipsis-v"
-                              style={{ marginLeft: 25 }}
+                              style={{ marginLeft: 40 }}
                             ></i>
                           </button>
+
                           <PopOver
                             isOpen={activePopover === product._id}
                             onClose={() => setActivePopover(null)}
                             items={getActionItems(product)}
                             className="product-actions-popover"
+                            anchorRef={{
+                              current: actionButtonRefs.current[product._id],
+                            }}
+                            position="bottom"
                           />
                         </div>
                       </td>
@@ -207,7 +233,10 @@ const Products = () => {
               </table>
             )}
             {!loading && filteredProducts.length === 0 && (
-              <div style={{ textAlign: "center" }}>No Products Found</div>
+              <div className="no-products-state">
+                <i className="fas fa-box-open no-products-icon"></i>
+                <h3>No Products Found</h3>
+              </div>
             )}
           </div>
         </div>

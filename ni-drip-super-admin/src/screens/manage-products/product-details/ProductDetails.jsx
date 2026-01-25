@@ -1,3 +1,18 @@
+/**
+ * @file ProductDetails.jsx
+ * @module Screens/Products/Details
+ * @description
+ * An immersive detail view for a specific inventory asset.
+ * * **Visual Architecture:**
+ * - **Gallery Engine:** Manages a multi-image viewer with active-state synchronization between thumbnails and the hero card.
+ * - **Sticky Layout:** Uses `position: sticky` on the visual column (Desktop) to keep the product image visible while scrolling through long specifications.
+ * - **Bento-style Specs:** Groups core metrics (Price, SKU, Stock) into a color-coded grid for rapid data scanning.
+ * * **Technical Logic:**
+ * - **State Hydration:** Prioritizes data from `location.state` to eliminate extra API calls during navigation.
+ * - **Simulated Latency:** Includes a 800ms `setTimeout` to ensure a smooth transition and consistent UX with the global loader.
+ * * @requires react-router-dom
+ */
+
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Loader from "../../../utilities/loader/Loader.utility";
@@ -81,7 +96,7 @@ const ProductDetails = () => {
             <div className="specs-grid">
               <div className="spec-item color1">
                 <label>Inventory SKU</label>
-                <span>{product._id?.slice(-8).toUpperCase()}</span>
+                <span>#{product._id?.slice(-6).toUpperCase()}</span>
               </div>
               <div className="spec-item color2">
                 <label>Unit Price</label>
@@ -92,7 +107,7 @@ const ProductDetails = () => {
                 <span>{product.stock} Units</span>
               </div>
               <div className="spec-item color4">
-                <label>User Rating</label>
+                <label>Rating</label>
                 <span>⭐ {product.averageRating || "0.0"}</span>
               </div>
             </div>

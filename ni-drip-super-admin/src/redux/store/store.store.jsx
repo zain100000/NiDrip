@@ -17,6 +17,8 @@ import { combineReducers } from "redux";
 import authReducer from "../slices/auth.slice";
 import superAdminReducer from "../slices/super-admin.slice";
 import productReducer from "../slices/product.slice";
+import reviewReducer from "../slices/review.slice";
+import supportReducer from "../slices/support.slice";
 
 /**
  * A wrapper around localStorage to provide async-like
@@ -59,6 +61,8 @@ const rootReducer = combineReducers({
   auth: authReducer,
   superAdmin: superAdminReducer,
   products: productReducer,
+  reviews: reviewReducer,
+  support: supportReducer,
 });
 
 /**

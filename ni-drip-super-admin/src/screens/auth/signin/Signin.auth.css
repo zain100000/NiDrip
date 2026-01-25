@@ -3,12 +3,7 @@
  * @module Styles/Signin
  * @description 
  * Stylesheet for the primary Authentication entry point.
- * * **Layout Architecture:**
- * - **Split-Panel Design:** Uses a 30% fixed-width left panel for functionality and a 70% fluid right panel for aesthetics.
- * - **Glassmorphism:** Applies a blurred linear gradient to the login sidebar for a modern UI feel.
- * - **Orbital Motion System:** A sophisticated decorative engine featuring 5 distinct orbital paths (visible) and high-fidelity radial-gradient "planets."
- * * **Animation Specs:**
- * - Uses a central `rotate` keyframe with varying durations (24s to 54s) and alternating directions (normal/reverse) to create a multi-dimensional effect.
+ * Refactored to utilize global design system tokens.
  * * @requires ../../../styles/global.styles.css
  */
 
@@ -18,7 +13,8 @@
 #signin-screen {
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #f0f4ff 0%, #d0e0ff 100%);
+  /* Using global neutral scale for background */
+  background: linear-gradient(135deg, var(--white) 0%, var(--gray) 100%);
 }
 
 /* Grid */
@@ -33,9 +29,10 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  /* Glassmorphism using primary brand color */
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   backdrop-filter: blur(20px);
-  padding: 25px 50px;
+  padding: var(--spacing-lg) var(--spacing-xl);
 }
 
 /* Form content container */
@@ -46,37 +43,36 @@
 
 /* Logo */
 #signin-screen .logo-container {
-  margin-bottom: 60px;
+  margin-bottom: var(--spacing-xl);
   text-align: center;
 }
 
 #signin-screen .logo {
   width: auto;
-  height: 80px;
+  height: 80px; /* Custom height for branding, but margin is tokenized */
 }
 
 /* Input groups */
 #signin-screen .input-group {
-  margin-bottom: 10px;
+  margin-bottom: var(--spacing-sm);
   width: 100%;
 }
 
 /* Forgot password */
 #signin-screen .forgot-password-container {
   text-align: right;
-  margin-top: -20px;
-  margin-bottom: 15px;
+  margin-top: calc(var(--spacing-md) * -1);
+  margin-bottom: var(--spacing-md);
 }
 
 #signin-screen .forgot-link {
   color: var(--dark);
   font-size: var(--font-size-sm);
-  text-decoration: none;
 }
 
 /* Button */
 #signin-screen .btn-container {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-xl);
 }
 
 /* Signup */
@@ -84,14 +80,13 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   font-size: var(--font-size-sm);
   color: var(--gray);
 }
 
 #signin-screen .signup-link {
   color: var(--dark);
-  text-decoration: none;
   font-weight: 500;
 }
 
@@ -108,23 +103,22 @@
   inset: 0;
 }
 
-/* Base orbit styles - now with visible faint lines */
+/* Base orbit styles */
 #signin-screen .orbit {
   position: absolute;
   top: 50%;
   left: 50%;
-  border: 1px solid rgba(150, 180, 255, 0.18); /* Subtle visible orbital path */
+  border: 2px solid rgba(219, 211, 211, 0.15);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: rotate linear infinite;
 }
 
-/* Individual orbits */
+/* Individual orbits - Maintained geometry from original design */
 #signin-screen .orbit-1 {
   width: 340px;
   height: 340px;
   animation-duration: 24s;
-  animation-delay: 0s;
 }
 #signin-screen .orbit-2 {
   width: 520px;
@@ -162,17 +156,18 @@
   border-radius: 50%;
 }
 
+/* Semantic colored planets */
 #signin-screen .ball-1 {
   width: 40px;
   height: 40px;
-  background: radial-gradient(circle at 30% 30%, #ff6b9d, #c44c7f);
-  box-shadow: 0 0 50px #ff6b9d;
+  background: radial-gradient(circle at 30% 30%, var(--primary), #c44c7f);
+  box-shadow: 0 0 50px var(--primary);
 }
 #signin-screen .ball-2 {
   width: 55px;
   height: 55px;
-  background: radial-gradient(circle at 30% 30%, #5ce1e6, #00bcd4);
-  box-shadow: 0 0 60px #5ce1e6;
+  background: radial-gradient(circle at 30% 30%, var(--secondary), #00bcd4);
+  box-shadow: 0 0 60px var(--secondary);
 }
 #signin-screen .ball-3 {
   width: 35px;
@@ -183,14 +178,14 @@
 #signin-screen .ball-4 {
   width: 65px;
   height: 65px;
-  background: radial-gradient(circle at 30% 30%, #ff8b94, #ff5c8a);
-  box-shadow: 0 0 70px #ff8b94;
+  background: radial-gradient(circle at 30% 30%, var(--error), #ff5c8a);
+  box-shadow: 0 0 70px var(--error);
 }
 #signin-screen .ball-5 {
   width: 45px;
   height: 45px;
-  background: radial-gradient(circle at 30% 30%, #72d6c9, #34d1bf);
-  box-shadow: 0 0 50px #72d6c9;
+  background: radial-gradient(circle at 30% 30%, var(--success), #34d1bf);
+  box-shadow: 0 0 50px var(--success);
 }
 
 @keyframes rotate {
@@ -202,7 +197,7 @@
   }
 }
 
-/* Responsive */
+/* Responsive Overrides */
 @media (max-width: 992px) {
   #signin-screen .signin-grid {
     flex-direction: column;
@@ -210,8 +205,8 @@
 
   #signin-screen .left-side {
     flex: 1;
-    padding: 60px 40px 40px 40px;
-    justify-content: flex-start;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    justify-content: center; /* Centered for tablet/mobile */
   }
 
   #signin-screen .form-content {
@@ -226,14 +221,10 @@
 
 @media (max-width: 576px) {
   #signin-screen .left-side {
-    padding: 40px 20px;
+    padding: var(--spacing-lg) var(--spacing-md);
   }
 
   #signin-screen .logo-container {
-    margin-bottom: 40px;
-  }
-
-  #signin-screen .right-side {
-    display: none;
+    margin-bottom: var(--spacing-lg);
   }
 }
