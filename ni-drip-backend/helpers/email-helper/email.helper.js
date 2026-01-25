@@ -130,7 +130,7 @@ const getEmailTemplate = (content, title = "NIDRIP Notification") => `
 const shortenId = (id) => {
   if (!id) return "#------";
   const str = id.toString();
-  return "#" + str.slice(-6);
+  return "#" + str.slice(-6).toUpperCase();
 };
 
 /**
