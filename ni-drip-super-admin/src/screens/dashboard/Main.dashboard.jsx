@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import Card from "../../utilities/card/Card.utility";
 import { getAllProducts } from "../../redux/slices/product.slice";
 import { getAllTickets } from "../../redux/slices/support.slice";
+import { getAllUsers } from "../../redux/slices/user.slice";
 
 const Main = () => {
   const dispatch = useDispatch();
@@ -28,13 +29,13 @@ const Main = () => {
   const user = useSelector((state) => state.auth.user);
   const products = useSelector((state) => state.products.products || []);
   const support = useSelector((state) => state.support.allTickets || []);
-
-  console.log("Support", support);
+  const allUsers = useSelector((state) => state.users.allUsers || []);
 
   useEffect(() => {
     if (user?.id) {
       dispatch(getAllProducts());
       dispatch(getAllTickets());
+      dispatch(getAllUsers());
     }
   }, [dispatch, user?.id]);
 
@@ -54,6 +55,12 @@ const Main = () => {
     };
   }, [support]);
 
+  const userStats = useMemo(() => {
+    return {
+      totalUsers: allUsers.length,
+    };
+  }, [allUsers]);
+
   const handleNavigateProducts = () =>
     navigate("/super-admin/products/manage-products");
 
@@ -62,6 +69,8 @@ const Main = () => {
 
   const handleNavigateSupport = () =>
     navigate("/super-admin/support/manage-support-tickets");
+
+  const handleNavigateUsers = () => navigate("/super-admin/users/manage-users");
 
   return (
     <section id="dashboard">
@@ -111,6 +120,18 @@ const Main = () => {
               mainValue={supportTicketStats.totalSupportTickets}
               accentColor="#c9ee43"
               onClick={handleNavigateSupport}
+              hoverEffect={true}
+              size="small"
+            />
+          </div>
+
+          <div className="col-6 col-md-4 col-lg-4">
+            <Card
+              title="Total Customers"
+              icon={<i className="fas fa-users" />}
+              mainValue={userStats.totalUsers}
+              accentColor="#ee43d7"
+              onClick={handleNavigateUsers}
               hoverEffect={true}
               size="small"
             />

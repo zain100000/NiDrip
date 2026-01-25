@@ -100,11 +100,12 @@
 
 /* Status Badges */
 #support-ticket .status-badge {
-  padding: 5px 12px;
+  padding: 5px 14px;
   border-radius: 20px;
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
+
 }
 
 #support-ticket .status-badge.open {
@@ -116,11 +117,11 @@
   color: var(--white);
 }
 #support-ticket .status-badge.resolved {
-  background: #d1fae5;
+  background: #95e9be;
   color: var(--white);
 }
 #support-ticket .status-badge.closed {
-  background: #f3f4f6;
+  background: var(--error);
   color: var(--white);
 }
 

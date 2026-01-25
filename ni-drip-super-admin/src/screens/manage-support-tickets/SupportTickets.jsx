@@ -16,7 +16,11 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./SupportTickets.css";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllTickets, deleteTicket } from "../../redux/slices/support.slice";
+import {
+  getAllTickets,
+  deleteTicket,
+  updateTicketStatus,
+} from "../../redux/slices/support.slice";
 import Loader from "../../utilities/loader/Loader.utility";
 import InputField from "../../utilities/input-field/InputField.utility";
 import PopOver from "../../utilities/pop-over/PopOver.utility";
@@ -36,7 +40,9 @@ const SupportTicket = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  console.log("Ticketsss", support);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   const actionButtonRefs = useRef({});
 
@@ -58,8 +64,8 @@ const SupportTicket = () => {
     closed: support.filter((p) => p.status === "CLOSED").length,
   };
 
-  const handleOpenDeleteModal = (review) => {
-    setSelectedTicket(review);
+  const handleOpenDeleteModal = (support) => {
+    setSelectedTicket(support);
     setIsDeleteModalOpen(true);
   };
 
@@ -68,33 +74,93 @@ const SupportTicket = () => {
 
     setDeleting(true);
 
-    const result = await dispatch(deleteTicket(selectedTicket._id));
+    try {
+      const result = await dispatch(deleteTicket(selectedTicket._id));
 
-    if (deleteReview.fulfilled.match(result)) {
-      toast.success(result.payload.message);
-      setIsDeleteModalOpen(false);
-      setSelectedTicket(null);
-    } else {
-      toast.error(result.payload?.message || "Failed");
+      if (deleteTicket.fulfilled.match(result)) {
+        toast.success(result.payload?.message || "Ticket deleted");
+
+        setIsDeleteModalOpen(false);
+        setSelectedTicket(null);
+        setActivePopover(null);
+      } else {
+        toast.error(result.payload?.message || "Failed to delete ticket");
+      }
+    } catch (error) {
+      toast.error("Unexpected error occurred");
+    } finally {
+      setDeleting(false);
     }
-
-    setDeleting(false);
   };
 
-  const getActionItems = (support) => [
-    {
-      label: "Change Ticket Status",
-      icon: "fas fa-sync",
-      // action: () => handleOpenDeleteModal(support),
-    },
+  const getNextStatus = (currentStatus) => {
+    const flow = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
+    const index = flow.indexOf(currentStatus);
+    return index >= 0 && index < flow.length - 1 ? flow[index + 1] : null;
+  };
 
-    {
+  const nextStatus = selectedTicket
+    ? getNextStatus(selectedTicket.status)
+    : null;
+
+  const handleOpenStatusModal = (ticket) => {
+    setSelectedTicket(ticket);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!selectedTicket) return;
+
+    const nextStatus = getNextStatus(selectedTicket.status);
+    if (!nextStatus) return;
+
+    setUpdatingStatus(true);
+
+    try {
+      const result = await dispatch(
+        updateTicketStatus({
+          ticketId: selectedTicket._id,
+          status: nextStatus,
+        }),
+      );
+
+      if (updateTicketStatus.fulfilled.match(result)) {
+        toast.success(
+          result.payload?.message || `Status updated to ${nextStatus}`,
+        );
+        setIsStatusModalOpen(false);
+        setSelectedTicket(null);
+      } else {
+        toast.error(result.payload?.message || "Failed to update status");
+      }
+    } catch (error) {
+      toast.error("Unexpected error occurred");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const getActionItems = (support) => {
+    const items = [];
+
+    if (support.status !== "CLOSED") {
+      items.push({
+        label: "Change support Status",
+        icon: "fas fa-sync",
+        action: () => handleOpenStatusModal(support),
+      });
+    }
+
+    // Delete action is always available
+    items.push({
       label: "Delete Ticket",
       icon: "fas fa-trash",
       type: "danger",
       action: () => handleOpenDeleteModal(support),
-    },
-  ];
+    });
+
+    return items;
+  };
 
   return (
     <section id="support-ticket">
@@ -276,7 +342,10 @@ const SupportTicket = () => {
                               );
                             }}
                           >
-                            <i className="fas fa-ellipsis-v" style={{marginLeft: 25}}></i>
+                            <i
+                              className="fas fa-ellipsis-v"
+                              style={{ marginLeft: 25 }}
+                            ></i>
                           </button>
                           <PopOver
                             isOpen={activePopover === support._id}
@@ -296,7 +365,7 @@ const SupportTicket = () => {
               </table>
             )}
 
-             {!loading && filteredTickets.length === 0 && (
+            {!loading && filteredTickets.length === 0 && (
               <div className="no-ticket-state">
                 <i className="fas fa-ticket-alt no-ticket-icon"></i>
                 <h3>Ticket Not Found</h3>
@@ -324,9 +393,50 @@ const SupportTicket = () => {
           },
         ]}
       >
-        Are you sure you want to permanently delete the {""}
-        {""} ticket #
-        <strong>{selectedTicket?._id.slice(-6).toUpperCase()}</strong>
+        Are you sure you want to permanently delete ticket{" "}
+        <strong>
+          {selectedTicket?._id
+            ? `#${selectedTicket._id.slice(-6).toUpperCase()}`
+            : "#------"}
+        </strong>{" "}
+      </Modal>
+
+      <Modal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        title="Update Ticket Status"
+        buttons={[
+          {
+            label: "Cancel",
+            className: "cancel-btn",
+            onClick: () => setIsStatusModalOpen(false),
+          },
+          {
+            label: `Move to ${nextStatus}`,
+            className: "primary-btn",
+            onClick: handleUpdateStatus,
+            loading: updatingStatus,
+            disabled: !nextStatus,
+          },
+        ]}
+      >
+        {nextStatus ? (
+          <p>
+            Are you sure you want to move ticket{" "}
+            <strong>
+              {selectedTicket?._id
+                ? `#${selectedTicket._id.slice(-6).toUpperCase()}`
+                : "#------"}
+            </strong>{" "}
+            from <strong>{selectedTicket?.status}</strong> to{" "}
+            <strong>{nextStatus}</strong>?
+          </p>
+        ) : (
+          <p>
+            This ticket is already <strong>CLOSED</strong>. No further status
+            update allowed.
+          </p>
+        )}
       </Modal>
     </section>
   );

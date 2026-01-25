@@ -43,6 +43,17 @@ router.get(
 );
 
 /**
+ * @description Get all users 
+ * @route   GET /api/user/get-all-users
+ * @access  Private (Authenticated user)
+ */
+router.get(
+  "/get-all-users",
+  encryptedAuthMiddleware,
+  userController.getAllUsers,
+);
+
+/**
  * @description Update user profile (name, phone, address, picture)
  * @route   PATCH /api/user/update-user/:userId
  * @access  Private (Authenticated user)

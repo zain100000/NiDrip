@@ -25,6 +25,10 @@ import ResetPassword from "../screens/auth/reset-password/ResetPassword.auth";
 // Dashboard
 import Dashboard from "../screens/dashboard/Main.dashboard";
 
+// Users Management
+import Users from "../screens/manage-users/users/Users";
+import UserDetails from "../screens/manage-users/user-details/UserDetails";
+
 // Products Management
 import AddProduct from "../screens/manage-products/add-product/AddProduct";
 import Products from "../screens/manage-products/products/Products";
@@ -69,6 +73,13 @@ const AppNavigator = () => {
 
         {/* Dashboard Routes */}
         <Route path="dashboard" element={<Dashboard />} />
+
+        {/* Users Management */}
+        <Route path="users/manage-users" element={<Users />} />
+        <Route
+          path="users/manage-users/user-details/:userId"
+          element={<UserDetails />}
+        />
 
         {/* Products Management */}
         <Route

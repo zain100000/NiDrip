@@ -19,6 +19,7 @@ import superAdminReducer from "../slices/super-admin.slice";
 import productReducer from "../slices/product.slice";
 import reviewReducer from "../slices/review.slice";
 import supportReducer from "../slices/support.slice";
+import userReducer from "../slices/user.slice";
 
 /**
  * A wrapper around localStorage to provide async-like
@@ -63,6 +64,7 @@ const rootReducer = combineReducers({
   products: productReducer,
   reviews: reviewReducer,
   support: supportReducer,
+  users: userReducer,
 });
 
 /**

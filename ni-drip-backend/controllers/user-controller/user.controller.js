@@ -205,7 +205,7 @@ exports.loginUser = async (req, res) => {
       user: {
         id: user._id,
         userName: user.userName,
-        email: user.email,        
+        email: user.email,
       },
       token,
       expiresIn: 86400,
@@ -244,6 +244,37 @@ exports.getUserById = async (req, res) => {
     });
   } catch (error) {
     console.error("Get user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+/**
+ * Get all Users
+ * @access Private(SuperAdmin)
+ */
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    if (req.user.role !== "SUPERADMIN") {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access required",
+      });
+    }
+
+    const users = await User.find();
+
+    res.status(200).json({
+      success: true,
+      message: "Users fetched successfully",
+      count: users.length,
+      allUsers: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
     res.status(500).json({
       success: false,
       message: "Server Error",

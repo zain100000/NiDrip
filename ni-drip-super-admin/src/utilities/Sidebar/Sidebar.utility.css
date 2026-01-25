@@ -15,19 +15,21 @@
 #sidebar {
   width: 280px;
   height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
   background: linear-gradient(180deg, var(--primary) 0%, var(--primary) 100%);
   padding: 20px 18px;
   z-index: 99;
   overflow-y: auto;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 #sidebar .sidebar-header {
   display: flex;
   justify-content: center;
-  padding: 20px 0 40px 0;
+  padding: 20px 0 20px 0;
 }
 
 #sidebar .sidebar-logo-img {
@@ -39,16 +41,15 @@
 #sidebar .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   padding: 0;
-  margin: 0;
   list-style: none;
+  gap: 14px;
 }
 
 #sidebar .sidebar-link {
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 10px;
   text-decoration: none;
   color: var(--white);
@@ -67,7 +68,6 @@
   align-items: center;
   justify-content: center;
   margin-right: 18px;
-
   color: #333;
   font-size: 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
@@ -75,7 +75,7 @@
 }
 
 #sidebar .link-text {
-  font-size: 17px;
+  font-size: 14px;
   letter-spacing: 0.3px;
 }
 
@@ -116,7 +116,7 @@
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease;
-    cursor: pointer;
+  cursor: pointer;
 }
 
 #sidebar .profile-img:hover {

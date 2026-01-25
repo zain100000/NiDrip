@@ -43,6 +43,11 @@ const Sidebar = () => {
 
   const navItems = [
     { name: "Dashboard", path: "/super-admin", icon: "fas fa-home" },
+     {
+      name: "Manage Customers",
+      path: "/super-admin/users/manage-users",
+      icon: "fas fa-users",
+    },
     {
       name: "Manage Products",
       path: "/super-admin/products/manage-products",
@@ -61,7 +66,7 @@ const Sidebar = () => {
     {
       name: "Manage Tickets",
       path: "/super-admin/support/manage-support-tickets",
-      icon: "fas fa-ticket-alt",
+      icon: "fas fa-headset",
     },
   ];
 

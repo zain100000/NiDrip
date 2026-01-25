@@ -98,11 +98,62 @@ export const deleteTicket = createAsyncThunk(
 
       return {
         success: true,
-        message: message,
-        deletedticketId: ticketId,
+        message,
+        deletedTicketId: ticketId,
       };
     } catch (error) {
       const backendError = error.response?.data;
+      return rejectWithValue({
+        message: backendError?.message || error.message,
+        success: false,
+        status: error.response?.status || 0,
+      });
+    }
+  },
+);
+
+/**
+ * @function updateTicketStatus
+ * @async
+ * @description Updates the status of a support ticket.
+ * @param {{ ticketId: string, status: string }}
+ */
+export const updateTicketStatus = createAsyncThunk(
+  "support/updateTicketStatus",
+  async ({ ticketId, status }, { rejectWithValue }) => {
+    const token = getToken();
+
+    if (!token)
+      return rejectWithValue({
+        message: "Admin is not authenticated.",
+        success: false,
+      });
+
+    try {
+      const response = await axios.put(
+        `${BACKEND_API_URL}/support/action/update-ticket-status/${ticketId}`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const { message, success, updatedStatus } = response.data;
+
+      if (!success) throw new Error(message);
+
+      return {
+        success: true,
+        message,
+        ticketId,
+        updatedStatus,
+      };
+    } catch (error) {
+      const backendError = error.response?.data;
+
       return rejectWithValue({
         message: backendError?.message || error.message,
         success: false,
@@ -158,14 +209,39 @@ const supportSlice = createSlice({
       .addCase(deleteTicket.fulfilled, (state, action) => {
         state.loading = false;
         state.allTickets = state.allTickets.filter(
-          (ticket) => ticket._id !== action.payload.deletedticketId,
+          (ticket) => ticket._id !== action.payload.deletedTicketId,
         );
+
         state.message = action.payload.message;
         state.success = action.payload.success;
       })
       .addCase(deleteTicket.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Deletion failed";
+        state.message = action.payload?.message;
+        state.success = false;
+      })
+
+      .addCase(updateTicketStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      .addCase(updateTicketStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        const { ticketId, updatedStatus } = action.payload;
+        const ticket = state.allTickets.find((t) => t._id === ticketId);
+        if (ticket) {
+          ticket.status = updatedStatus;
+        }
+        state.message = action.payload.message;
+        state.success = true;
+      })
+
+      .addCase(updateTicketStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.message || "Failed to update ticket status";
         state.message = action.payload?.message;
         state.success = false;
       });
