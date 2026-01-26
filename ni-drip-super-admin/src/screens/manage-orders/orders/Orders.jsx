@@ -1,3 +1,22 @@
+/**
+ * @file Orders.jsx
+ * @module Screens/Orders/Management
+ * @description
+ * A comprehensive administrative dashboard for monitoring and managing customer order lifecycles.
+ * * **Visual Architecture:**
+ * - **KPI Stats Grid:** A top-level summary row using color-coded cards to display real-time counts of PENDING, SHIPPED, and DELIVERED orders.
+ * - **Actionable Data Table:** A dense, responsive grid featuring contextual `PopOver` menus for each row to keep the UI clean while providing deep-link actions.
+ * - **Workflow Modals:** Controlled confirmation overlays that manage state transitions for both Order and Payment statuses.
+ * * **Technical Logic:**
+ * - **Redux Integration:** Dispatches `getAllOrders` on mount and utilizes `updateOrderStatus` for persistent state changes.
+ * - **State Machine Logic:** Implements `getNextOrderStatus` and `getNextPaymentStatus` to enforce a strictly sequential workflow (e.g., Pending -> Processing -> Shipped).
+ * - **Client-Side Search:** Real-time filtering engine that scans Order IDs and Customer Usernames without additional API overhead.
+ * - **Dynamic Anchor Positioning:** Uses `useRef` mapping (`actionButtonRefs`) to precisely anchor popover menus to specific table rows.
+ * * @requires react-redux
+ * @requires react-router-dom
+ * @requires toast-notifications
+ */
+
 import React, { useState, useEffect, useRef } from "react";
 import "./Orders.css";
 import { useDispatch, useSelector } from "react-redux";

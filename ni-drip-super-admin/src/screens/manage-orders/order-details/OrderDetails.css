@@ -20,9 +20,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: var(--spacing-xl);
-  background: linear-gradient(to bottom, #f9fafb, #ffffff);
   min-height: 100vh;
-  font-family: "Inter", sans-serif;
 }
 
 #order-details-screen .od-header-banner {
