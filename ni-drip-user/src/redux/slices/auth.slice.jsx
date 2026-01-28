@@ -28,34 +28,36 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CONFIG from '../config/Config';
 
-const { BASE_URL } = CONFIG;
+const { BACKEND_API_URL } = CONFIG;
 
 /**
  * Register a new user (supports file upload e.g. profile picture)
  * @param {Object} formData - FormData object containing registration fields
  */
 export const registerUser = createAsyncThunk(
-  'auth/registerUser',
+  'user/register',
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${BASE_URL}/user/signup-user`,
+        `${BACKEND_API_URL}/user/signup-user`,
         formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
+        { headers: { 'Content-Type': 'multipart/form-data' } },
       );
 
-      const { success, message, user } = response.data;
+      const { message, success } = response.data;
 
-      return { success, message, user };
+      if (typeof success !== 'boolean') {
+        throw new Error('Invalid registration response');
+      }
+
+      return { message, success };
     } catch (error) {
-      const errData = error.response?.data || {
-        message: 'Network error - could not reach the server',
-      };
-      return rejectWithValue(errData);
+      const backend = error.response?.data;
+
+      return rejectWithValue({
+        message: backend?.message || error.message || 'Registration failed',
+        success: backend?.success ?? false,
+      });
     }
   },
 );
@@ -65,27 +67,97 @@ export const registerUser = createAsyncThunk(
  * @param {Object} loginData - { email, password }
  */
 export const loginUser = createAsyncThunk(
-  'auth/loginUser',
+  'user/login',
   async (loginData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${BASE_URL}/user/signin-user`,
+        `${BACKEND_API_URL}/user/signin-user`,
         loginData,
       );
 
-      const { token, user, success, message } = response.data;
+      const { token, user, message, success } = response.data;
 
-      if (token) {
-        await AsyncStorage.setItem('authToken', token);
+      if (!success || !token || !user) {
+        throw new Error('Invalid login response');
       }
 
-      return { success, message, token, user };
+      await AsyncStorage.setItem('authToken', token);
+
+      return { user, token, message };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || {
-          message: 'Network error - could not reach the server',
+      const backend = error.response?.data;
+
+      return rejectWithValue({
+        message: backend?.message || error.message || 'Login failed',
+        success: backend?.success ?? false,
+        status: error.response?.status || 0,
+      });
+    }
+  },
+);
+
+/**
+ * Forgot Password
+ * @param {Object} data - { email, role }
+ */
+
+export const forgotPassword = createAsyncThunk(
+  'user/forgot-password',
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${BACKEND_API_URL}/auth/forgot-password`, {
+        email,
+        role: 'USER',
+      });
+
+      const { message, success } = response.data;
+
+      if (!success) throw new Error(message);
+
+      return { message };
+    } catch (error) {
+      const backend = error.response?.data;
+
+      return rejectWithValue({
+        message: backend?.message || error.message || 'Forgot password failed',
+        success: backend?.success ?? false,
+        status: error.response?.status || 0,
+      });
+    }
+  },
+);
+
+
+/**
+ * Reset Password
+ * @param {Object} data - { newPassword, role }
+ */
+
+export const resetPassword = createAsyncThunk(
+  'user/reset-password',
+  async ({ newPassword, token }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${BACKEND_API_URL}/auth/reset-password/${token}`,
+        {
+          newPassword,
+          role: 'USER',
         },
       );
+
+      const { message, success } = response.data;
+
+      if (!success) throw new Error(message);
+
+      return { message };
+    } catch (error) {
+      const backend = error.response?.data;
+
+      return rejectWithValue({
+        message: backend?.message || error.message || 'Reset failed',
+        success: backend?.success ?? false,
+        status: error.response?.status || 0,
+      });
     }
   },
 );
@@ -94,17 +166,13 @@ export const loginUser = createAsyncThunk(
  * Logout user - calls server logout endpoint and clears local token
  */
 export const logoutUser = createAsyncThunk(
-  'auth/logoutUser',
-  async (_, { rejectWithValue, getState }) => {
+  'user/logout',
+  async (_, { rejectWithValue }) => {
     try {
       const token = await AsyncStorage.getItem('authToken');
 
-      if (!token) {
-        return { success: true, message: 'Already logged out' };
-      }
-
-      const response = await axios.post(
-        `${BASE_URL}/user/logout-user`,
+      await axios.post(
+        `${BACKEND_API_URL}/user/logout-user`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -113,18 +181,16 @@ export const logoutUser = createAsyncThunk(
 
       await AsyncStorage.removeItem('authToken');
 
-      return response.data;
+      return true;
     } catch (error) {
       await AsyncStorage.removeItem('authToken');
-      return rejectWithValue(
-        error.response?.data || {
-          message: 'Logout failed - token cleared locally',
-        },
-      );
+
+      return rejectWithValue({
+        message: error.response?.data?.message || 'Logout failed',
+      });
     }
   },
 );
-
 
 /**
  * Check Auth
@@ -138,7 +204,7 @@ export const checkAuth = createAsyncThunk(
         return { isAuthenticated: false };
       }
 
-      const response = await axios.get(`${BASE_URL}/user/me`, {
+      const response = await axios.get(`${BACKEND_API_URL}/user/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

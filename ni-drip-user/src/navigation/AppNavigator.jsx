@@ -30,6 +30,11 @@ import { theme } from '../styles/Themes';
 import Splash from '../screens/splash-screen/Splash';
 import OnBoarding from '../screens/onboarding-screen/OnBoarding'
 
+import Signin from '../screens/auth/signin-screen/Signin'
+import Signup from '../screens/auth/signup-screen/Signup'
+
+import BottomNavigator from '../navigation/bottom-navigator/BottomNavigator'
+
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -58,6 +63,19 @@ const AppNavigator = () => {
          <Stack.Screen name="OnBoarding">
           {props => <OnBoarding {...props} setStatusBarColor={setStatusBarColor} />}
         </Stack.Screen>
+
+        <Stack.Screen name="Signin">
+          {props => <Signin {...props} setStatusBarColor={setStatusBarColor} />}
+        </Stack.Screen>
+
+        <Stack.Screen name="Signup">
+          {props => <Signup {...props} setStatusBarColor={setStatusBarColor} />}
+        </Stack.Screen>
+
+        <Stack.Screen name="Main">
+          {props => <BottomNavigator {...props} setStatusBarColor={setStatusBarColor} />}
+        </Stack.Screen>
+
 
       </Stack.Navigator>
     </>

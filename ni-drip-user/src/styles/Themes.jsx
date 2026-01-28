@@ -27,12 +27,12 @@ export const theme = {
   },
 
   typography: {
-    black: 'Inter_18pt-Black',
-    bold: 'Inter_18pt-Bold',
-    light: 'Inter_18pt-Light',
-    medium: 'Inter_18pt-Medium',
-    regular: 'Inter_18pt-Regular',
-    semiBold: 'Inter_18pt-SemiBold',
+    black: 'Nunito-Black',
+    bold: 'Nunito-Bold',
+    light: 'Nunito-Light',
+    medium: 'Nunito-Medium',
+    regular: 'Nunito-Regular',
+    semiBold: 'Nunito-SemiBold',
 
     fontSize: {
       xs: 16,

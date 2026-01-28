@@ -7,107 +7,83 @@
  * Serves as the top-level component responsible for:
  * - Mounting the primary navigation structure via {@link RootNavigator}
  * - Initializing the global toast notification system (react-native-toast-message)
- *   with custom styling aligned to the application's design system
+ *   with clean, modern, and consistent custom styling aligned to the application's design system
  *
- * Features custom success & error toasts with:
- * - Branded colors from the theme
- * - Responsive sizing based on screen width
- * - Consistent typography, spacing, border radius and shadow styling
- * - Custom leading icons using MaterialCommunityIcons
+ * Enhanced toast features:
+ * - Unified custom toast rendering via BaseToast for success & error (no more duplication)
+ * - Stronger accent border, softer shadows, better spacing & responsive icon sizing
+ * - Premium modern look: larger rounded corners, deeper elevation, tighter typography
+ * - Reduced code clutter while improving visual hierarchy and polish
  */
 
 import React from 'react';
 import { Dimensions } from 'react-native';
 import RootNavigator from './src/navigation/RootNavigator';
-import Toast, { ErrorToast, SuccessToast } from 'react-native-toast-message';
+import Toast, { BaseToast } from 'react-native-toast-message';
 import { theme } from './src/styles/Themes';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
+
+const CustomToast = type => props => {
+  const isSuccess = type === 'success';
+  const color = isSuccess ? theme.colors.success : theme.colors.error;
+  const iconName = isSuccess ? 'check-circle' : 'alert-circle';
+
+  return (
+    <BaseToast
+      {...props}
+      style={{
+        borderLeftWidth: width * 0.03,
+        borderLeftColor: color,
+        backgroundColor: theme.colors.white,
+        borderRadius: theme.borderRadius.large,
+        padding: width * 0.02,
+        width: width * 0.9,
+        marginTop: height * 0.016,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 6,
+      }}
+      contentContainerStyle={{
+        flex: 1,
+        paddingLeft: width * 0.02,
+      }}
+      text1Style={{
+        fontSize: width * 0.045,
+        fontFamily: theme.typography.medium,
+        color,
+        marginBottom: 0,
+      }}
+      text2Style={{
+        fontSize: width * 0.038,
+        fontFamily: theme.typography.medium,
+        color: theme.colors.dark,
+      }}
+      text1NumberOfLines={2}
+      text2NumberOfLines={3}
+      renderLeadingIcon={() => (
+        <MaterialCommunityIcons
+          name={iconName}
+          size={width * 0.07}
+          color={color}
+          style={{ marginRight: width * 0.02 }}
+        />
+      )}
+    />
+  );
+};
+
+const toastConfig = {
+  success: CustomToast('success'),
+  error: CustomToast('error'),
+};
 
 const App = () => {
-  const toastConfig = {
-    success: props => (
-      <SuccessToast
-        {...props}
-        style={{
-          borderLeftColor: theme.colors.success,
-          backgroundColor: theme.colors.white,
-          borderRadius: theme.borderRadius.medium,
-          shadowColor: '#000',
-          shadowOpacity: 0.15,
-          shadowOffset: { SCREEN_WIDTH: 0, height: 4 },
-          shadowRadius: 6,
-          paddingHorizontal: SCREEN_WIDTH * 0.012,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-        contentContainerStyle={{
-          paddingHorizontal: SCREEN_WIDTH * 0.012,
-          flex: 1,
-        }}
-        text1Style={{
-          fontSize: SCREEN_WIDTH * 0.04,
-          fontFamily: theme.typography.inter.bold,
-          color: theme.colors.success,
-        }}
-        text2Style={{
-          fontSize: SCREEN_WIDTH * 0.037,
-          fontFamily: theme.typography.inter.regular,
-          color: theme.colors.secondary,
-        }}
-        renderLeadingIcon={() => (
-          <MaterialCommunityIcons
-            name="check-circle"
-            size={24}
-            color={theme.colors.success}
-            style={{ marginRight: SCREEN_WIDTH * 0.04 }}
-          />
-        )}
-      />
-    ),
-
-    error: props => (
-      <ErrorToast
-        {...props}
-        style={{
-          borderLeftColor: theme.colors.error,
-          backgroundColor: theme.colors.white,
-          borderRadius: theme.borderRadius.medium,
-          shadowColor: '#000',
-          shadowOpacity: 0.15,
-          shadowOffset: { SCREEN_WIDTH: 0, height: 4 },
-          shadowRadius: 6,
-          paddingHorizontal: SCREEN_WIDTH * 0.012,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-        contentContainerStyle={{
-          paddingHorizontal: SCREEN_WIDTH * 0.012,
-          flex: 1,
-        }}
-        text1Style={{
-          fontSize: SCREEN_WIDTH * 0.04,
-          fontFamily: theme.typography.inter.bold,
-          color: theme.colors.error,
-        }}
-        text2Style={{
-          fontSize: SCREEN_WIDTH * 0.037,
-          fontFamily: theme.typography.inter.regular,
-          color: theme.colors.secondary,
-        }}
-        renderLeadingIcon={() => (
-          <MaterialCommunityIcons
-            name="alert-circle"
-            size={24}
-            color={theme.colors.error}
-            style={{ marginRight: SCREEN_WIDTH * 0.04 }}
-          />
-        )}
-      />
-    ),
-  };
-
   return (
     <>
       <RootNavigator />

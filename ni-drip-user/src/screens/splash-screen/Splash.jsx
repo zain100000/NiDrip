@@ -20,13 +20,11 @@ import * as Animatable from 'react-native-animatable';
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../../styles/Themes';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
-import { checkAuth } from '../../redux/slices/auth.slice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('screen');
 
 const Splash = () => {
-  const dispatch = useDispatch();
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
 
@@ -37,13 +35,14 @@ const Splash = () => {
   }, []);
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    const checkSession = async () => {
       try {
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const result = await dispatch(checkAuth()).unwrap();
+        const token = await AsyncStorage.getItem('authToken');
+        console.log(token);
 
-        if (result.isAuthenticated) {
+        if (token) {
           navigation.reset({
             index: 0,
             routes: [{ name: 'Main' }],
@@ -55,16 +54,13 @@ const Splash = () => {
           });
         }
       } catch (error) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'OnBoarding' }],
-        });
       } finally {
+        setLoading(false);
       }
     };
 
-    initializeAuth();
-  }, [dispatch, navigation]);
+    checkSession();
+  }, []);
 
   Animatable.initializeRegistryWithDefinitions({
     epicEntrance: {

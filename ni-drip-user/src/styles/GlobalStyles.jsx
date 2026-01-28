@@ -76,7 +76,7 @@ export const globalStyles = StyleSheet.create({
 
   buttonPrimary: {
     backgroundColor: theme.colors.primary,
-    paddingVertical: verticalScale(theme.spacing(1.8)),
+    paddingVertical: verticalScale(theme.spacing(1.4)),
     paddingHorizontal: scale(theme.spacing(4)),
     borderRadius: moderateScale(theme.borderRadius.large),
     alignItems: 'center',
@@ -98,7 +98,7 @@ export const globalStyles = StyleSheet.create({
   buttonText: {
     color: theme.colors.white,
     fontFamily: theme.typography.semiBold,
-    fontSize: moderateScale(theme.typography.fontSize.md),
+    fontSize: moderateScale(theme.typography.fontSize.sm),
   },
 
   inputContainer: {
@@ -111,7 +111,7 @@ export const globalStyles = StyleSheet.create({
     borderWidth: moderateScale(1),
     borderColor: theme.colors.gray,
     borderRadius: moderateScale(theme.borderRadius.medium),
-    paddingVertical: verticalScale(theme.spacing(1.6)),
+    paddingVertical: verticalScale(theme.spacing(1.2)),
     paddingHorizontal: scale(theme.spacing(2)),
     fontSize: moderateScale(theme.typography.fontSize.md),
     fontFamily: theme.typography.regular,
@@ -121,7 +121,7 @@ export const globalStyles = StyleSheet.create({
 
   inputLabel: {
     fontFamily: theme.typography.medium,
-    fontSize: moderateScale(theme.typography.fontSize.sm),
+    fontSize: moderateScale(theme.typography.fontSize.xs),
     marginBottom: verticalScale(theme.spacing(0.5)),
     paddingLeft: width * 0.01,
     color: theme.colors.dark,

@@ -27,7 +27,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CONFIG from '../config/Config';
 
-const { BASE_URL } = CONFIG;
+const { BACKEND_API_URL } = CONFIG;
 
 const getToken = async rejectWithValue => {
   try {
@@ -49,7 +49,7 @@ export const getUser = createAsyncThunk(
     try {
       const token = await getToken(rejectWithValue);
       const response = await axios.get(
-        `${BASE_URL}/user/get-user-by-id/${userId}`,
+        `${BACKEND_API_URL}/user/get-user-by-id/${userId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -60,70 +60,6 @@ export const getUser = createAsyncThunk(
         error.response?.data || {
           message: error.message || 'Failed to fetch user',
         },
-      );
-    }
-  },
-);
-
-export const updateUser = createAsyncThunk(
-  'user/updateUser',
-  async ({ userId, formData }, { rejectWithValue }) => {
-    try {
-      const token = await getToken(rejectWithValue);
-
-      const response = await axios.patch(
-        `${BASE_URL}/user/update-user/${userId}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
-
-      return response.data.updatedUser;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || {
-          message: error.message || 'Failed to update profile',
-        },
-      );
-    }
-  },
-);
-
-export const deleteAccount = createAsyncThunk(
-  'user/deleteAccount',
-  async (userId, { rejectWithValue, dispatch }) => {
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await axios.delete(
-        `${BASE_URL}/user/delete-user/${userId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Account deletion failed');
-      }
-
-      await AsyncStorage.multiRemove(['authToken', 'userData']);
-
-      dispatch(clearUser());
-
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to delete account',
       );
     }
   },
@@ -155,32 +91,6 @@ const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(getUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      .addCase(updateUser.pending, state => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-      })
-      .addCase(updateUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      .addCase(deleteAccount.pending, state => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(deleteAccount.fulfilled, state => {
-        state.loading = false;
-        state.user = null;
-      })
-      .addCase(deleteAccount.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

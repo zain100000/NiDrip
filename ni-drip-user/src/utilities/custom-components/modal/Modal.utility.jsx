@@ -6,11 +6,10 @@
  * Features:
  * - Smooth fade + scale + slight bounce entrance/exit animation
  * - Centered modal with semi-transparent backdrop
- * - Optional title, icon, custom content, and configurable buttons
- * - Support for loading states, disabled buttons, and danger/secondary variants
+ * - Optional title + subtitle (now renders both if provided; subtitle appears below title)
+ * - Custom content, configurable buttons, loading states, variants
  * - Backdrop dismissal and optional close (×) button
- * - Responsive sizing based on screen width
- * - Designed especially for confirmation dialogs (e.g. delete product/confirmation flows)
+ * - Responsive sizing
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -33,6 +32,7 @@ const Modal = ({
   isOpen,
   onClose,
   title = '',
+  subtitle = '',
   children,
   buttons = [],
   icon,
@@ -112,11 +112,20 @@ const Modal = ({
               ]}
             >
               <View style={styles.header}>
-                {title ? (
-                  <Text style={styles.title}>{title}</Text>
-                ) : (
-                  <View style={{ flex: 1 }} />
-                )}
+                <View style={styles.headerContent}>
+                  {title ? <Text style={styles.title}>{title}</Text> : null}
+                  {subtitle ? (
+                    <Text
+                      style={[
+                        styles.subtitle,
+                        title ? styles.subtitleWithTitle : null,
+                      ]}
+                    >
+                      {subtitle}
+                    </Text>
+                  ) : null}
+                </View>
+
                 {showCloseButton && (
                   <TouchableOpacity
                     onPress={onClose}
@@ -210,10 +219,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#1E1E1E',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: height * 0.04,
-    },
+    shadowOffset: { width: 0, height: height * 0.04 },
     shadowOpacity: 0.51,
     shadowRadius: 13.16,
     elevation: 20,
@@ -221,20 +227,35 @@ const styles = StyleSheet.create({
 
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: width * 0.04,
+    marginBottom: width * 0.05,
+  },
+
+  headerContent: {
+    flex: 1,
   },
 
   title: {
     fontFamily: theme.typography.bold,
     fontSize: theme.typography.fontSize.xl,
     color: theme.colors.white,
-    flex: 1,
+  },
+
+  subtitle: {
+    fontFamily: theme.typography.regular,
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.gray,
+    marginTop: 4,
+  },
+
+  subtitleWithTitle: {
+    marginTop: 6,
   },
 
   closeButton: {
     padding: width * 0.03,
+    marginLeft: width * 0.02,
   },
 
   closeIcon: {
@@ -245,7 +266,7 @@ const styles = StyleSheet.create({
   },
 
   body: {
-    marginTop: width * 0.014,
+    marginTop: width * 0.01,
     marginBottom: width * 0.09,
   },
 

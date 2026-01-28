@@ -1,4 +1,21 @@
-import React, { useRef, useState } from 'react';
+/**
+ * @file OnBoarding.js
+ * @module OnBoarding
+ * @description
+ * An immersive, highly-animated onboarding experience for the electronics and home appliances store.
+ *
+ * This component serves as the user's first interaction, utilizing:
+ * - **Parallax & Interpolation:** Driven by `Animated.Value`, syncing Lottie scales, text translations,
+ * and button opacities with the `FlatList` scroll position.
+ * - **Dynamic Backgrounds:** Implements `react-native-linear-gradient` with opacity cross-fading
+ * to create seamless color transitions between slides.
+ * - **Visual Storytelling:** Integrates `LottieView` animations to represent product categories,
+ * secure payments, and logistics services.
+ * - **Navigation Control:** Manages the transition from introductory content to the
+ * authentication flow (Signin) via a persistent state-aware footer.
+ */
+
+import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,6 +23,7 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  StatusBar,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import LottieView from 'lottie-react-native';
@@ -69,6 +87,12 @@ const OnBoarding = () => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
 
+  useEffect(() => {
+    StatusBar.setBarStyle('light-content');
+    StatusBar.setTranslucent(true);
+    StatusBar.setBackgroundColor('transparent');
+  }, []);
+
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
       setCurrentIndex(viewableItems[0].index);
@@ -97,49 +121,49 @@ const OnBoarding = () => {
       (index + 1) * width,
     ];
 
-    const lottieTranslateY = scrollXpolate({
+    const lottieTranslateY = scrollX.interpolate({
       inputRange,
       outputRange: [height * 0.12, 0, -height * 0.12],
       extrapolate: 'clamp',
     });
-    const lottieScale = scrollXpolate({
+    const lottieScale = scrollX.interpolate({
       inputRange,
       outputRange: [0.85, 1.05, 0.85],
       extrapolate: 'clamp',
     });
-    const lottieOpacity = scrollXpolate({
+    const lottieOpacity = scrollX.interpolate({
       inputRange,
       outputRange: [0.4, 1, 0.4],
       extrapolate: 'clamp',
     });
 
-    const titleTranslateY = scrollXpolate({
+    const titleTranslateY = scrollX.interpolate({
       inputRange,
       outputRange: [60, 0, -60],
       extrapolate: 'clamp',
     });
-    const titleOpacity = scrollXpolate({
+    const titleOpacity = scrollX.interpolate({
       inputRange,
       outputRange: [0, 1, 0],
       extrapolate: 'clamp',
     });
-    const descTranslateY = scrollXpolate({
+    const descTranslateY = scrollX.interpolate({
       inputRange,
       outputRange: [100, 0, -100],
       extrapolate: 'clamp',
     });
-    const descOpacity = scrollXpolate({
+    const descOpacity = scrollX.interpolate({
       inputRange,
       outputRange: [0, 1, 0],
       extrapolate: 'clamp',
     });
 
-    const btnOpacity = scrollXpolate({
+    const btnOpacity = scrollX.interpolate({
       inputRange,
       outputRange: [0.6, 1, 0.6],
       extrapolate: 'clamp',
     });
-    const btnScale = scrollXpolate({
+    const btnScale = scrollX.interpolate({
       inputRange,
       outputRange: [0.92, 1.05, 0.92],
       extrapolate: 'clamp',
@@ -202,14 +226,14 @@ const OnBoarding = () => {
             <View style={styles.buttonsRow}>
               <Button
                 title="SKIP"
-                width={width * 0.43}
+                width={width * 0.33}
                 onPress={handleComplete}
                 backgroundColor={theme.colors.gray}
                 textColor={theme.colors.dark}
               />
               <Button
                 title="NEXT"
-                width={width * 0.43}
+                width={width * 0.33}
                 onPress={handleNext}
                 backgroundColor={theme.colors.primary}
                 textColor={theme.colors.white}
@@ -229,7 +253,7 @@ const OnBoarding = () => {
           index * width,
           (index + 1) * width,
         ];
-        const opacity = scrollXpolate({
+        const opacity = scrollX.interpolate({
           inputRange,
           outputRange: [0, 1, 0],
           extrapolate: 'clamp',
@@ -287,12 +311,12 @@ const OnBoarding = () => {
               index * width,
               (index + 1) * width,
             ];
-            const scale = scrollXpolate({
+            const scale = scrollX.interpolate({
               inputRange,
               outputRange: [1, 1.5, 1],
               extrapolate: 'clamp',
             });
-            const bgColor = scrollXpolate({
+            const bgColor = scrollX.interpolate({
               inputRange,
               outputRange: [
                 theme.colors.gray,
@@ -322,8 +346,8 @@ export default OnBoarding;
 
 const styles = StyleSheet.create({
   slide: {
-    width: width * 1,
-    height: height * 1,
+    width,
+    height,
     alignItems: 'center',
     paddingHorizontal: theme.spacing(4),
   },
@@ -351,7 +375,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xxl,
     color: theme.colors.dark,
     textAlign: 'center',
-    lineHeight: height * 0.05,
+    lineHeight: theme.typography.lineHeight.xxl,
     marginBottom: theme.spacing(3),
     ...theme.elevation.depth2,
   },
@@ -361,7 +385,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     color: '#444444',
     textAlign: 'center',
-    lineHeight: height * 0.03,
+    lineHeight: theme.typography.lineHeight.lg,
     maxWidth: width * 0.85,
   },
 
@@ -380,7 +404,7 @@ const styles = StyleSheet.create({
 
   paginationWrapper: {
     position: 'absolute',
-    bottom: height * 0.15,
+    bottom: height * 0.18,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -394,14 +418,14 @@ const styles = StyleSheet.create({
   dot: {
     width: width * 0.02,
     height: height * 0.01,
-    borderRadius: theme.borderRadius.large,
-    marginHorizontal: width * 0.02,
+    borderRadius: theme.borderRadius.circle,
+    marginHorizontal: width * 0.016,
   },
 
   circleLargeTopRight: {
     position: 'absolute',
-    width: 300,
-    height: 300,
+    width: width * 0.8,
+    height: height * 0.3,
     borderRadius: 150,
     backgroundColor: theme.colors.primary + '33',
     top: -100,

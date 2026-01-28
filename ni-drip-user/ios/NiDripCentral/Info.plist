@@ -51,12 +51,12 @@
 	<false/>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Inter_18pt-Black.ttf</string>
-		<string>Inter_18pt-Bold.ttf</string>
-		<string>Inter_18pt-Light.ttf</string>
-		<string>Inter_18pt-Medium.ttf</string>
-		<string>Inter_18pt-Regular.ttf</string>
-		<string>Inter_18pt-SemiBold.ttf</string>
+		<string>Nunito-Black.ttf</string>
+		<string>Nunito-Bold.ttf</string>
+		<string>Nunito-Light.ttf</string>
+		<string>Nunito-Medium.ttf</string>
+		<string>Nunito-Regular.ttf</string>
+		<string>Nunito-SemiBold.ttf</string>
 	</array>
 </dict>
 </plist>
