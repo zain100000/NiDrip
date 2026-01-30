@@ -26,7 +26,7 @@ import {
 import { theme } from '../../../styles/Themes';
 import Loader from '../loader/Loader.utility';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const Modal = ({
   isOpen,

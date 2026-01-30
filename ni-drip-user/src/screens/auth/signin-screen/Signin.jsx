@@ -29,7 +29,7 @@ import Toast from 'react-native-toast-message';
 import { loginUser } from '../../../redux/slices/auth.slice';
 import LinearGradient from 'react-native-linear-gradient';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const Signin = () => {
   const dispatch = useDispatch();

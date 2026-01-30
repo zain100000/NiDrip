@@ -21,7 +21,7 @@
 import { theme } from './Themes';
 import { StyleSheet, Dimensions } from 'react-native';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const GUIDELINE_BASE_WIDTH = 375;
 const GUIDELINE_BASE_HEIGHT = 812;

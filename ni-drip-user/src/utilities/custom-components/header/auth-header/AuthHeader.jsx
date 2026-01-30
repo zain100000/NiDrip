@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Image, StyleSheet, Dimensions, Text } from 'react-native';
 import { theme } from '../../../../styles/Themes';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const AuthHeader = ({ logo, title }) => {
   return (

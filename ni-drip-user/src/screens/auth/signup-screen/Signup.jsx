@@ -23,7 +23,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import {
   isValidInput,
-  validateName,
+  validateFullName,
   validatePassword,
   validateEmail,
 } from '../../../utilities/custom-components/validations/Validations.utility';
@@ -33,7 +33,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import Modal from '../../../utilities/custom-components/modal/Modal.utility';
 import LinearGradient from 'react-native-linear-gradient';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const Signup = () => {
   const dispatch = useDispatch();
@@ -54,8 +54,7 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    StatusBar.setBarStyle('light-content');
-    StatusBar.setTranslucent(true);
+    StatusBar.setBarStyle('light-content');    
     StatusBar.setBackgroundColor('transparent');
   }, []);
 
@@ -73,7 +72,7 @@ const Signup = () => {
 
   const handleNameChange = value => {
     setName(value);
-    setNameError(validateName(value));
+    setNameError(validateFullName(value));
   };
 
   const handleEmailChange = value => {
@@ -90,17 +89,17 @@ const Signup = () => {
     ImagePicker.openPicker({
       width: 512,
       height: 512,
-      cropping: false, 
+      cropping: false,
       mediaType: 'photo',
       quality: 0.8,
-      includeBase64: false, 
+      includeBase64: false,
     })
       .then(image => {
-        handleImageUpload(image.path); 
+        handleImageUpload(image.path);
       })
       .catch(err => {
         if (err.code === 'E_PICKER_CANCELLED') {
-          return; 
+          return;
         }
         Toast.show({
           type: 'error',
@@ -115,7 +114,7 @@ const Signup = () => {
     ImagePicker.openCamera({
       width: 512,
       height: 512,
-      cropping: false, 
+      cropping: false,
       mediaType: 'photo',
       quality: 0.8,
       includeBase64: false,

@@ -19,7 +19,7 @@ const CONFIG = {
   BACKEND_API_URL: 'http://192.168.1.4:8000/api',
 
   /** Prod Backend API Url */
-  // BACKEND_API_URL: "https://ni-drip-backend.vercel.app/api",
+  // BACKEND_API_URL: 'https://ni-drip-backend.vercel.app/api',
 };
 
 export default CONFIG;

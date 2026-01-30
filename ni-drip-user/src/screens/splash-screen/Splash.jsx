@@ -29,15 +29,14 @@ const Splash = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    StatusBar.setBarStyle('light-content');
-    StatusBar.setTranslucent(true);
+    StatusBar.setBarStyle('light-content');    
     StatusBar.setBackgroundColor('transparent');
   }, []);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 4500));
 
         const token = await AsyncStorage.getItem('authToken');
         console.log(token);

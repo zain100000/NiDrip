@@ -105,10 +105,13 @@ export const forgotPassword = createAsyncThunk(
   'user/forgot-password',
   async ({ email }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BACKEND_API_URL}/auth/forgot-password`, {
-        email,
-        role: 'USER',
-      });
+      const response = await axios.post(
+        `${BACKEND_API_URL}/auth/forgot-password`,
+        {
+          email,
+          role: 'USER',
+        },
+      );
 
       const { message, success } = response.data;
 
@@ -126,7 +129,6 @@ export const forgotPassword = createAsyncThunk(
     }
   },
 );
-
 
 /**
  * Reset Password
@@ -171,7 +173,7 @@ export const logoutUser = createAsyncThunk(
     try {
       const token = await AsyncStorage.getItem('authToken');
 
-      await axios.post(
+      const response = await axios.post(
         `${BACKEND_API_URL}/user/logout-user`,
         {},
         {
@@ -180,14 +182,15 @@ export const logoutUser = createAsyncThunk(
       );
 
       await AsyncStorage.removeItem('authToken');
-
-      return true;
+      
+      // Return the whole data object from backend
+      return response.data; 
     } catch (error) {
       await AsyncStorage.removeItem('authToken');
 
-      return rejectWithValue({
-        message: error.response?.data?.message || 'Logout failed',
-      });
+      return rejectWithValue(
+        error.response?.data?.message || 'Logout failed'
+      );
     }
   },
 );

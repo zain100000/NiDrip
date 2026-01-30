@@ -32,7 +32,7 @@ import { theme } from '../../styles/Themes';
 import { globalStyles } from '../../styles/GlobalStyles';
 import Button from '../../utilities/custom-components/button/Button.utility';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const ONBOARDING_DATA = [
   {
@@ -88,8 +88,8 @@ const OnBoarding = () => {
   const flatListRef = useRef(null);
 
   useEffect(() => {
-    StatusBar.setBarStyle('light-content');
-    StatusBar.setTranslucent(true);
+    StatusBar.setBarStyle('light-content');    
+    StatusBar.setTranslucent(true)
     StatusBar.setBackgroundColor('transparent');
   }, []);
 
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
 
   btnContainer: {
     position: 'absolute',
-    bottom: height * 0.1,
+    bottom: 0,
     width: '100%',
     alignItems: 'center',
   },

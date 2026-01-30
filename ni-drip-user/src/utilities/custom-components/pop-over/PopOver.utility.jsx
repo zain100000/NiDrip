@@ -30,7 +30,7 @@ import {
 import { theme } from '../../../styles/Themes';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const OFFSET = 8;
 

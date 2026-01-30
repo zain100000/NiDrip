@@ -23,7 +23,7 @@ import Toast, { BaseToast } from 'react-native-toast-message';
 import { theme } from './src/styles/Themes';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const CustomToast = type => props => {
   const isSuccess = type === 'success';

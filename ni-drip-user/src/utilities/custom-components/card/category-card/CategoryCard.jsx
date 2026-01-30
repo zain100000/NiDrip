@@ -1,3 +1,18 @@
+/**
+ * @component CategoryCard
+ * @description A high-performance, animated card component used to display product categories.
+ * * Responsibilities:
+ * - Displays category imagery with a fallback shimmer/placeholder system.
+ * - Handles mount-in spring animations and touch-feedback scaling.
+ * - Provides visual density through itemCount badges and overlays.
+ * * @param {Object} props
+ * @param {string} props.title - The display name of the category.
+ * @param {string} [props.imageUrl] - The remote URI for the category cover image.
+ * @param {Function} props.onPress - Callback function triggered when the card is tapped.
+ * @param {number} [props.itemCount=0] - The total number of products available in this category.
+ * * @returns {React.JSX.Element}
+ */
+
 import React, { useRef, useEffect } from 'react';
 import {
   View,
@@ -7,12 +22,11 @@ import {
   Animated,
   TouchableOpacity,
   Dimensions,
-  Pressable,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { theme } from '../../../../styles/Themes';
 
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const CategoryCard = ({ title, imageUrl, onPress, itemCount }) => {
   const mountScale = useRef(new Animated.Value(0.9)).current;
@@ -47,13 +61,17 @@ const CategoryCard = ({ title, imageUrl, onPress, itemCount }) => {
 
   const handlePressIn = () => {
     Animated.spring(pressScale, {
-      toValue: 0.97,
+      toValue: 0.95,
       useNativeDriver: true,
     }).start();
   };
 
   const handlePressOut = () => {
-    Animated.spring(pressScale, { toValue: 1, useNativeDriver: true }).start();
+    Animated.spring(pressScale, {
+      toValue: 1,
+      friction: 4,
+      useNativeDriver: true,
+    }).start();
   };
 
   const shimmerTranslate = shimmer.interpolate({
@@ -65,86 +83,81 @@ const CategoryCard = ({ title, imageUrl, onPress, itemCount }) => {
 
   return (
     <TouchableOpacity
-      activeOpacity={0.95}
+      activeOpacity={0.9}
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={styles.container}
-      accessibilityRole="button"
-      accessibilityLabel={`${title} category`}
     >
       <Animated.View
         style={[
           styles.card,
-          { opacity: opacityAnim, transform: [{ scale: combinedScale }] },
+          {
+            opacity: opacityAnim,
+            transform: [{ scale: combinedScale }],
+          },
         ]}
       >
-        <Pressable style={styles.inner}>
-          <View
-            style={[
-              styles.imageWrap,
-              hasImage ? styles.imageWrapWithImage : styles.imageWrapNoImage,
-            ]}
-          >
-            {hasImage ? (
-              <Image source={{ uri: imageUrl }} style={styles.image} />
-            ) : (
-              <View style={styles.placeholder}>
-                <MaterialCommunityIcons
-                  name="apps"
-                  size={36}
-                  color={theme.colors.gray}
-                />
-                <Animated.View
-                  style={[
-                    styles.shimmer,
-                    { transform: [{ translateX: shimmerTranslate }] },
-                  ]}
-                />
-              </View>
-            )}
-
-            <View style={styles.topRow}>
-              <View style={styles.iconCircle}>
-                <MaterialCommunityIcons
-                  name="chevron-right"
-                  size={18}
-                  color={theme.colors.white}
-                />
-              </View>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{itemCount ?? 0}</Text>
-                <Text style={styles.badgeSub}>items</Text>
-              </View>
+        <View
+          style={[
+            styles.imageWrap,
+            hasImage ? styles.imageWrapWithImage : styles.imageWrapNoImage,
+          ]}
+        >
+          {hasImage ? (
+            <Image source={{ uri: imageUrl }} style={styles.image} />
+          ) : (
+            <View style={styles.placeholder}>
+              <MaterialCommunityIcons
+                name="apps"
+                size={36}
+                color={theme.colors.gray}
+              />
+              <Animated.View
+                style={[
+                  styles.shimmer,
+                  { transform: [{ translateX: shimmerTranslate }] },
+                ]}
+              />
             </View>
+          )}
 
-            <View
-              style={[
-                styles.overlay,
-                hasImage ? styles.overlayDark : styles.overlayLight,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.title,
-                  hasImage ? styles.titleLight : styles.titleDark,
-                ]}
-                numberOfLines={1}
-              >
-                {title}
-              </Text>
-              <Text
-                style={[
-                  styles.subtitle,
-                  hasImage ? styles.titleLight : styles.titleDark,
-                ]}
-                numberOfLines={1}
-              >
-                {itemCount ?? 0} Products
-              </Text>
+          <View style={styles.topRow}>
+            <View style={styles.iconCircle}>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={18}
+                color={theme.colors.white}
+              />
             </View>
           </View>
-        </Pressable>
+
+          <View
+            style={[
+              styles.overlay,
+              hasImage ? styles.overlayDark : styles.overlayLight,
+            ]}
+          >
+            <Text
+              style={[
+                styles.title,
+                hasImage ? styles.titleLight : styles.titleDark,
+              ]}
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+            <Text
+              style={[
+                styles.subtitle,
+                hasImage ? styles.titleLight : styles.titleDark,
+              ]}
+              numberOfLines={1}
+            >
+              {itemCount ?? 0} Products
+            </Text>
+          </View>
+        </View>
       </Animated.View>
     </TouchableOpacity>
   );
@@ -270,8 +283,8 @@ const styles = StyleSheet.create({
   },
 
   iconCircle: {
-    width: width * 0.08,
-    height: height * 0.036,
+    width: width * 0.076,
+    height: height * 0.038,
     borderRadius: theme.borderRadius.circle,
     backgroundColor: 'rgba(0,0,0,0.28)',
     alignItems: 'center',
@@ -282,10 +295,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.white,
-    paddingHorizontal: width * 0.022,
-    paddingVertical: height * 0.006,
     borderRadius: theme.borderRadius.circle,
-    minWidth: 30,
+    minWidth: width * 0.09,
     elevation: 2,
   },
 
@@ -297,7 +308,7 @@ const styles = StyleSheet.create({
   },
 
   badgeSub: {
-    fontSize: 12,
+    fontSize: theme.typography.fontSize.xs,
     fontFamily: theme.typography.light,
     color: theme.colors.dark,
     textAlign: 'center',

@@ -2,24 +2,19 @@
  * @file AppNavigator.jsx
  * @module Navigation/AppNavigator
  * @description
- * Root navigation setup using React Navigation's Native Stack Navigator.
+ * Root navigation configuration for the NiDrip Central application.
+ * This navigator manages the top-level stack, including the splash sequence,
+ * authentication flow, and the primary application entry points.
  *
  * Responsibilities:
- * - Defines the main app navigation structure
- * - Manages global StatusBar appearance (color + light-content style)
- * - Starts with cinematic Splash screen as entry point
- * - Provides dynamic status bar color control to child screens
- * - Applies consistent screen options: no headers, fade-from-bottom transitions
- *
- * Current structure:
- * - Splash screen (initial route)
- * - Designed to expand with authentication flow, main app screens, modals, etc.
+ * - Orchestrates the main navigation hierarchy[cite: 1].
+ * - Manages global StatusBar state with dynamic color updates[cite: 1].
+ * - Implements consistent screen transitions and gesture navigation[cite: 1].
  *
  * Features:
- * - Global StatusBar management with runtime color updates
- * - Smooth modern screen transitions
- * - Gesture navigation enabled
- * - Theme-integrated default status bar color
+ * - Dynamic StatusBar management[cite: 1].
+ * - Smooth 'fade_from_bottom' animations[cite: 1].
+ * - Centralized route definitions for Auth, Profile, and Main flows[cite: 1].
  */
 
 import React, { useState } from 'react';
@@ -27,13 +22,26 @@ import { StatusBar } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { theme } from '../styles/Themes';
 
+// --- Screen Imports ---
 import Splash from '../screens/splash-screen/Splash';
-import OnBoarding from '../screens/onboarding-screen/OnBoarding'
+import OnBoarding from '../screens/onboarding-screen/OnBoarding';
 
-import Signin from '../screens/auth/signin-screen/Signin'
-import Signup from '../screens/auth/signup-screen/Signup'
+// Auth Screens
+import Signin from '../screens/auth/signin-screen/Signin';
+import Signup from '../screens/auth/signup-screen/Signup';
 
-import BottomNavigator from '../navigation/bottom-navigator/BottomNavigator'
+// Main Application
+import BottomNavigator from '../navigation/bottom-navigator/BottomNavigator';
+
+// Profile & Sub-screens
+import MyProfile from '../screens/profile-screen/sub-screens/MyProfile';
+import EmailVerification from '../screens/profile-screen/sub-screens/EmailVerification';
+import About from '../screens/profile-screen/sub-screens/About';
+import Support from '../screens/profile-screen/sub-screens/Support';
+
+// Product Category
+import ProductCategory from '../screens/products/product-category/ProductCategory';
+import ProductDetails from '../screens/products/product-detail/ProductDetails';
 
 const Stack = createNativeStackNavigator();
 
@@ -44,7 +52,7 @@ const AppNavigator = () => {
     <>
       <StatusBar
         backgroundColor={statusBarColor}
-        barStyle="light-content"
+        barStyle="dark-content"
         translucent={false}
       />
 
@@ -56,14 +64,18 @@ const AppNavigator = () => {
           gestureEnabled: true,
         }}
       >
+        {/* --- ENTRY POINT --- */}
         <Stack.Screen name="Splash">
           {props => <Splash {...props} setStatusBarColor={setStatusBarColor} />}
         </Stack.Screen>
 
-         <Stack.Screen name="OnBoarding">
-          {props => <OnBoarding {...props} setStatusBarColor={setStatusBarColor} />}
+        <Stack.Screen name="OnBoarding">
+          {props => (
+            <OnBoarding {...props} setStatusBarColor={setStatusBarColor} />
+          )}
         </Stack.Screen>
 
+        {/* --- AUTHENTICATION FLOW --- */}
         <Stack.Screen name="Signin">
           {props => <Signin {...props} setStatusBarColor={setStatusBarColor} />}
         </Stack.Screen>
@@ -72,11 +84,51 @@ const AppNavigator = () => {
           {props => <Signup {...props} setStatusBarColor={setStatusBarColor} />}
         </Stack.Screen>
 
+        {/* --- MAIN APPLICATION ENTRY --- */}
         <Stack.Screen name="Main">
-          {props => <BottomNavigator {...props} setStatusBarColor={setStatusBarColor} />}
+          {props => (
+            <BottomNavigator {...props} setStatusBarColor={setStatusBarColor} />
+          )}
         </Stack.Screen>
 
+        {/* --- PROFILE & SETTINGS --- */}
+        <Stack.Screen name="My_Profile">
+          {props => (
+            <MyProfile {...props} setStatusBarColor={setStatusBarColor} />
+          )}
+        </Stack.Screen>
 
+        <Stack.Screen name="Email_Verification">
+          {props => (
+            <EmailVerification
+              {...props}
+              setStatusBarColor={setStatusBarColor}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="About_Us">
+          {props => <About {...props} setStatusBarColor={setStatusBarColor} />}
+        </Stack.Screen>
+
+        <Stack.Screen name="Support_Center">
+          {props => (
+            <Support {...props} setStatusBarColor={setStatusBarColor} />
+          )}
+        </Stack.Screen>
+
+        {/* --- PRODUCT CATEGORIES --- */}
+        <Stack.Screen name="Product_Category">
+          {props => (
+            <ProductCategory {...props} setStatusBarColor={setStatusBarColor} />
+          )}
+        </Stack.Screen>
+
+         <Stack.Screen name="Product_Details">
+          {props => (
+            <ProductDetails {...props} setStatusBarColor={setStatusBarColor} />
+          )}
+        </Stack.Screen>
       </Stack.Navigator>
     </>
   );

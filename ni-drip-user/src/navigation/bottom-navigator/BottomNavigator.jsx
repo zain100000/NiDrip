@@ -14,9 +14,10 @@ import { Image, StyleSheet, Dimensions, Animated } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { theme } from '../../styles/Themes';
 import Home from '../../screens/dashboard/Main';
+import Profile from '../../screens/profile-screen/Profile';
 
 const Tab = createBottomTabNavigator();
-const { width, height } = Dimensions.get('screen');
+const { width, height } = Dimensions.get('window');
 
 const AnimatedTabIcon = ({ focused, source }) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
@@ -75,6 +76,24 @@ const BottomNavigator = () => {
                 focused
                   ? require('../../assets/navigatorIcons/home-filled.png')
                   : require('../../assets/navigatorIcons/home.png')
+              }
+            />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Profile"
+        component={Profile}
+        options={{
+          tabBarLabel: 'Profile',
+          tabBarIcon: ({ focused }) => (
+            <AnimatedTabIcon
+              focused={focused}
+              source={
+                focused
+                  ? require('../../assets/navigatorIcons/profile-filled.png')
+                  : require('../../assets/navigatorIcons/profile.png')
               }
             />
           ),
